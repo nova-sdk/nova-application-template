@@ -21,7 +21,7 @@ after_script:
 lint-check:
   stage: lint
   script:
-    - docker build -f dockerfile/Dockerfile --target source -t app .
+    - docker build -f dockerfiles/Dockerfile --target source -t app .
     - docker run app poetry run ruff check
     - docker run app poetry run ruff format --check
     - docker run app poetry run mypy .
