@@ -39,6 +39,9 @@ unit-tests:
     - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports app poetry run coverage report
     - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports app poetry run coverage xml -o reports/coverage.xml
     - sed -i "s:<source>/src:<source>${CI_BUILDS_DIR}/${CI_PROJECT_PATH}:" reports/coverage.xml
+    - docker tag image ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
+    - docker push ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
+
   coverage: '/TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always
@@ -57,6 +60,7 @@ build-image:
     OVERWRITE_IMAGE: "false"
   when: manual
   script:
+    - docker pull ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
     - docker build -f dockerfiles/Dockerfile -t image .
     - docker tag image ${IMAGE_NAME}:latest
     - docker push ${IMAGE_NAME}:latest
@@ -74,7 +78,9 @@ package-build:
   script:
     - >
       docker run
-      image ${IMAGE_NAME}:${IMAGE_TAG}
+      -v `pwd`:/src
+      -u `id -u`:`id -g`
+      ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
       bash -c "
       poetry config repositories.gitlab_repo ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi &&
       poetry publish -u gitlab-ci-token -p ${CI_JOB_TOKEN} -r gitlab_repo
