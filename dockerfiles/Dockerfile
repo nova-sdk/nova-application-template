@@ -12,6 +12,7 @@ COPY . /src
 WORKDIR /src
 
 RUN poetry install
+RUN poetry build
 RUN poetry build --format=wheel
 
 RUN chmod og+rwX /poetry

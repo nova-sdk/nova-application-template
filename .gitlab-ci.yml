@@ -68,6 +68,9 @@ build-image:
       if ! docker pull ${IMAGE_NAME}:${IMAGE_TAG} || [ "$OVERWRITE_IMAGE" == "true" ]; then
         docker tag image ${IMAGE_NAME}:${IMAGE_TAG}
         docker push ${IMAGE_NAME}:${IMAGE_TAG}
+      else
+        echo tag ${IMAGE_TAG} already exist in ${NDIP_DOCKER_REPOSITORY}. Use OVERWRITE_IMAGE="true", delete image in repository or change the tag
+        exit 1
       fi
   tags:
     - rse-multi-builder
