@@ -36,6 +36,7 @@ unit-tests:
     - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports app poetry run coverage run
     - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports app poetry run coverage report
     - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports app poetry run coverage xml -o reports/coverage.xml
+    - sed -i "s:<source>/src:<source>${CI_BUILDS_DIR}/${CI_PROJECT_PATH}:" reports/coverage.xml
   coverage: '/TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always
