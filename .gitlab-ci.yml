@@ -1,0 +1,61 @@
+stages:
+  - lint
+  - test
+  - package
+  - container
+
+variables:
+  GIT_STRATEGY: clone
+
+before_script:
+  - curl https://code.ornl.gov/rse-deployment/rse-sharables/raw/master/rse-bash-modules.sh -O
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - source rse-bash-modules.sh
+  - func_rse_docker_cleanup
+
+after_script:
+  - curl https://code.ornl.gov/rse-deployment/rse-sharables/raw/master/rse-bash-modules.sh -O
+  - source rse-bash-modules.sh
+  - func_rse_docker_cleanup
+
+lint-check:
+  stage: lint
+  script:
+    - docker build -f dockerfile/Dockerfile --target source -t app .
+    - docker run app poetry run ruff check
+    - docker run app poetry run ruff format --check
+    - docker run app poetry run mypy .
+  tags:
+    - rse-multi-builder
+
+unit-tests:
+  stage: test
+  script:
+    - docker build -f dockerfile/Dockerfile --target source -t app .
+    - docker run app poetry run coverage run
+    - docker run app poetry run coverage xml
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  tags:
+    - rse-multi-builder
+
+#package-build:
+#  stage: package
+#  script:
+#    - docker build -f dockerfile/Dockerfile --target source -t app .
+#    - >
+#      docker run
+#      -v `pwd`:/src
+#      code.ornl.gov:4567/rse/images/python:3.11-slim
+#      bash -c "cd /src && pip install --upgrade pip poetry && poetry build &&
+#      poetry config repositories.gitlab_repo ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi &&
+#      poetry publish -u gitlab-ci-token -p ${CI_JOB_TOKEN} -r gitlab_repo
+#      "
+#  when: manual
+#  tags:
+#    - rse-multi-builder

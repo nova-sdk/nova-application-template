@@ -1,93 +1,154 @@
-# Python
+python_project_template
+=======================
+
+This repository is a template repository for Python projects under neutrons.
+After you create a new repository using this repo as template, please follow the following steps to adjust it for the new project.
+
+Codebase Adjustments
+--------------------
+
+1. Adjust the branch protection rules for the new repo. By default, we should protect the `main` (stable), `qa` (release candidate), and `next` (development) branches.
+
+    1.1 Go to the `Settings` tab of the new repo.
+
+    1.2 Click on `Branches` on the left side.
+
+    1.3 Click on `Add rule` button.
+
+    1.4 Follow the instructions from Github.
 
 
+2. Change the License if MIT license is not suitable for you project. For more information about licenses, please
+refer to [Choose an open source license](https://choosealicense.com/).
 
-## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+3. Update the environment dependency file `environment.yml`, which contain both runtime and development dependencies.
+For more information about conda environment file, please refer to [Conda environment file](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-file-manually).
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+    3.1 Specify environment 'name' field to match package name
 
-## Add your files
+    3.2 We strongly recommended using a single `environment.yml` file to manage all the dependencies, including the runtime and development dependencies.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+    3.3 Please add comments to the `environment.yml` file to explain the dependencies.
 
-```
-cd existing_repo
-git remote add origin https://code.ornl.gov/ndip/project-templates/python.git
-git branch -M main
-git push -uf origin main
-```
+    3.4 Please prune the dependencies to the minimum when possible, we would like the solver to figure out the dependency tree for us.
 
-## Integrate with your tools
 
-- [ ] [Set up project integrations](https://code.ornl.gov/ndip/project-templates/python/-/settings/integrations)
+4. Adjust pre-commit configuration file, `.pre-commit-config.yaml` to enable/disable the hooks you need. For more information about pre-commit, please refer to [pre-commit](https://pre-commit.com/).
 
-## Collaborate with your team
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+5. Having code coverage, `codecov.yaml` is **strongly recommended**, please refer to [Code coverage](https://coverage.readthedocs.io/en/coverage-5.5/) for more information.
 
-## Test and Deploy
 
-Use the built-in continuous integration in GitLab.
+6. Adjust the demo Github action yaml files for CI/CD. For more information about Github action, please refer to [Github action](https://docs.github.com/en/actions).
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+    6.1 Specify package name at: .github/workflows/package.yml#L34
 
-***
+    6.2 Specify package name at: .github/workflows/package.yml#L46
 
-# Editing this README
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+7. Adjust the conda recipe, `conda-recipe/meta.yaml` to provide the meta information for the conda package. For more information about conda recipe, please refer to [Conda build](https://docs.conda.io/projects/conda-build/en/latest/).
 
-## Suggestions for a good README
+    7.1 Specify package name at: conda.recipe/meta.yaml#L15
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+    7.2 Update license family, if necessary: conda.recipe/meta.yaml#L42
 
-## Name
-Choose a self-explaining name for your project.
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+8. Adjust `pyproject.toml` to match your project. For more information about `pyproject.toml`,
+please refer to [pyproject.toml](https://www.python.org/dev/peps/pep-0518/).
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+    8.1 Specify package name at: pyproject.toml#L2
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+    8.2 Specify package description at: pyproject.toml#L3
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+    8.3 Specify package name at: pyproject.toml#L39
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+    8.4 Specify any terminal entry points (terminal commands) at: pyproject.toml#48.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+In the example, invoking `packagename-cli` in a terminal is equivalent to running the python script `from packagenamepy.packagename.import main; main()`
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+    8.5 Projects will use a  single `pyproject.toml` file to manage all the project metadata, including the project name, version, author, license, etc.
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+    8.6 Python has moved away from `setup.cfg`/`setup.py`, and we would like to follow the trend for our new projects.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+10. Specify package name at  src/packagenamepy
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
 
-## License
-For open source projects, say how it is licensed.
+11. Specify package name at: src/packagenamepy/packagename.py
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+12. If a GUI isn't used, delete the MVP structure at src/packagenamepy:
+    11.1: mainwindow.py
+    11.2: home/
+    11.3: help/
+
+
+11. Clear the content of this file and add your own README.md as the project README file.
+We recommend putting badges of the project status at the top of the README file.
+For more information about badges, please refer to [shields.io](https://shields.io/).
+
+Repository Adjustments
+----------------------
+
+### Add an access token to anaconda
+
+Here we assume your intent is to upload the conda package to the [anaconda.org/neutrons](https://anaconda.org/neutrons) organization.
+An administrator of `anaconda.org/neutrons` must create an access token for your repository in the [access settings](https://anaconda.org/neutrons/settings/access).
+
+After created, the token must be stored in a `repository secret`:
+1. Navigate to the main page of the repository on GitHub.com.
+2. Click on the "Settings" tab.
+3. In the left sidebar, navigate to the "Security" section and select "Secrets and variables" followed by "Actions".
+4. Click on the "New repository secret" button.
+5. Enter `ANACONDA_TOKEN` for the secret name
+6. Paste the Anaconda access token
+7. Click on the "Add secret" button
+8. Test the setup by creating a release candidate tag,
+which will result in a package built and uploaded to https://anaconda.org/neutrons/mypackagename
+
+### Add an access token to codecov
+
+Follow the instructions in the [Confluence page](https://ornl-neutrons.atlassian.net/wiki/spaces/NDPD/pages/103546883/Coverage+reports)
+to create the access token.
+
+Packaging building instructions
+-------------------------------
+
+The default package publishing service is anaconda.
+However, we also support PyPI publishing as well.
+
+### Instruction for publish to PyPI
+
+1. Make sure you have the correct access to the project on PyPI.
+2. Make sure `git status` returns a clean state.
+3. At the root of the repo, use `python -m build` to generate the wheel.
+4. Check the wheel with `twine check dist/*`, everything should pass before we move to next step.
+5. When doing manual upload test, make sure to use testpypi instead of pypi.
+6. Use `twine upload --repository testpypi dist/*` to upload to testpypi, you will need to specify the testpipy url in your `~/.pypirc`, i.e.
+
+``````
+[distutils]
+index-servers = pypi, testpypi
+
+[testpypi]
+    repository = https://test.pypi.org/legacy/
+    username = __token__
+    password = YOUR_TESTPYPI_TOKEN
+
+``````
+
+7. Test the package on testpypi with `pip install --index-url https://test.pypi.org/simple/ mypackagename`.
+8. If everything is good, use the Github workflow, `package.yml` to trigger the publishing to PyPI.
+
+### Instruction for publish to Anaconda
+
+Publishing to Anaconda is handled via workflow, `package.yml`.
+
+Development environment setup
+-----------------------------
+
+### Build development environment
+
+1. By default, we recommend providing a single `environment.yml` that covers all necessary packages for development.
+2. The runtime dependency should be in `meta.yaml` for anaconda packaging, and `pyproject.toml` for PyPI publishing.
+3. When performing editable install for your feature branch, make sure to use `pip install --no-deps -e .` to ensure that `pip` does not install additional packages from `pyproject.toml` into development environment by accident.
