@@ -1,11 +1,5 @@
 """Main Application."""
 
 
-class MainClass:
-    """Main Class."""
-
-    def name(self) -> str:
-        return "name"
-
-
-__all__ = ["MainClass"]
+def main() -> None:
+    print("Hello from the main function!")
