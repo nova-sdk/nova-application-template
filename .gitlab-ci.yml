@@ -23,10 +23,10 @@ after_script:
 lint-check:
   stage: lint
   script:
-    - docker build -f dockerfiles/Dockerfile --target source -t app .
-    - docker run -u `id -u`:`id -g` app poetry run ruff check
-    - docker run -u `id -u`:`id -g` app poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` app poetry run mypy .
+    - docker build -f dockerfiles/Dockerfile --target source -t image .
+    - docker run -u `id -u`:`id -g` image poetry run ruff check
+    - docker run -u `id -u`:`id -g` image poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` image poetry run mypy .
   tags:
     - rse-multi-builder
 
@@ -81,7 +81,6 @@ package-build:
   script:
     - >
       docker run
-      -v `pwd`:/src
       -u `id -u`:`id -g`
       ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
       bash -c "
