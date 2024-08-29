@@ -7,7 +7,7 @@ stages:
 variables:
   GIT_STRATEGY: clone
   IMAGE_NAME: ${NDIP_DOCKER_REPOSITORY}/${CI_PROJECT_PATH}
-
+  IMAGE_TAG: "0.1.0"
 
 before_script:
   - curl https://code.ornl.gov/rse-deployment/rse-sharables/raw/master/rse-bash-modules.sh -O
@@ -54,34 +54,31 @@ unit-tests:
 build-image:
   stage: image
   variables:
-    TAG: "0.1.0"
     OVERWRITE_IMAGE: "false"
   when: manual
   script:
     - docker build -f dockerfiles/Dockerfile -t image .
+    - docker tag image ${IMAGE_NAME}:latest
+    - docker push ${IMAGE_NAME}:latest
     - >
-      if ! docker pull ${IMAGE_NAME}:${TAG} || [ "$OVERWRITE_IMAGE" == "true" ]; then
-        docker tag image ${IMAGE_NAME}:latest
-        docker push ${IMAGE_NAME}:latest
-        docker tag image ${IMAGE_NAME}:${TAG}
-        docker push ${IMAGE_NAME}:${TAG}
+      if ! docker pull ${IMAGE_NAME}:${IMAGE_TAG} || [ "$OVERWRITE_IMAGE" == "true" ]; then
+        docker tag image ${IMAGE_NAME}:${IMAGE_TAG}
+        docker push ${IMAGE_NAME}:${IMAGE_TAG}
       fi
   tags:
     - rse-multi-builder
 
 
-#package-build:
-#  stage: package
-#  script:
-#    - docker build -f dockerfile/Dockerfile --target source -t app .
-#    - >
-#      docker run
-#      -v `pwd`:/src
-#      code.ornl.gov:4567/rse/images/python:3.11-slim
-#      bash -c "cd /src && pip install --upgrade pip poetry && poetry build &&
-#      poetry config repositories.gitlab_repo ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi &&
-#      poetry publish -u gitlab-ci-token -p ${CI_JOB_TOKEN} -r gitlab_repo
-#      "
-#  when: manual
-#  tags:
-#    - rse-multi-builder
+package-build:
+  stage: package
+  script:
+    - >
+      docker run
+      image ${IMAGE_NAME}:${IMAGE_TAG}
+      bash -c "
+      poetry config repositories.gitlab_repo ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi &&
+      poetry publish -u gitlab-ci-token -p ${CI_JOB_TOKEN} -r gitlab_repo
+      "
+  when: manual
+  tags:
+    - rse-multi-builder
