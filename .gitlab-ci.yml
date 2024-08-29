@@ -22,25 +22,27 @@ lint-check:
   stage: lint
   script:
     - docker build -f dockerfiles/Dockerfile --target source -t app .
-    - docker run app poetry run ruff check
-    - docker run app poetry run ruff format --check
-    - docker run app poetry run mypy .
+    - docker run -u `id -u`:`id -g` app poetry run ruff check
+    - docker run -u `id -u`:`id -g` app poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` app poetry run mypy .
   tags:
     - rse-multi-builder
 
 unit-tests:
   stage: test
   script:
+    - mkdir reports
     - docker build -f dockerfiles/Dockerfile --target source -t app .
-    - docker run app poetry run coverage run
-    - docker run app poetry run coverage xml
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports app poetry run coverage run
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports app poetry run coverage report
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports app poetry run coverage xml -o reports/coverage.xml
   artifacts:
     when: always
     reports:
-      junit: junit.xml
+      junit: reports/junit.xml
       coverage_report:
         coverage_format: cobertura
-        path: coverage.xml
+        path: reports/coverage.xml
   tags:
     - rse-multi-builder
 

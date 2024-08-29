@@ -65,8 +65,8 @@ omit = [
 ]
 
 [tool.coverage.run]
-command_line = "-m pytest --junit-xml=junit.xml"
-
+command_line = "-m pytest --junit-xml=reports/junit.xml"
+data_file = "reports/.coverage"
 
 [tool.poetry.dev-dependencies]
 mypy = "^1.10.0"
