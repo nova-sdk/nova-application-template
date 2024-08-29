@@ -31,7 +31,7 @@ lint-check:
 unit-tests:
   stage: test
   script:
-    - docker build -f dockerfile/Dockerfile --target source -t app .
+    - docker build -f dockerfiles/Dockerfile --target source -t app .
     - docker run app poetry run coverage run
     - docker run app poetry run coverage xml
   artifacts:
