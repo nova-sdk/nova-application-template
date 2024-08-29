@@ -16,3 +16,14 @@ RUN poetry build --format=wheel
 
 RUN chmod og+rwX /poetry
 RUN chmod og+rwX /src
+
+
+
+FROM --platform=amd64 ubuntu:22.04 AS run
+
+RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get -y install tzdata
+RUN apt-get install -y python3.10 curl
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+
+COPY --from=source /src/dist /dist
+RUN pip install /dist/*.whl
