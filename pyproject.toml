@@ -59,6 +59,8 @@ check_untyped_defs = true
 disallow_untyped_defs = true
 ignore_errors = false
 disable_error_code = ["import-untyped"]
+# You can exclude files with the following (ONLY WHEN NECESSARY)
+# exclude = ["path/to/file"]
 
 [tool.coverage.report]
 omit = [
