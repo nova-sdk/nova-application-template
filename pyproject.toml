@@ -24,7 +24,7 @@ python_files = ["test*.py"]
 norecursedirs = [".git", "tmp*", "_tmp*", "__pycache__"]
 
 [tool.ruff]
-line-length = 80
+line-length = 120
 
 [tool.ruff.lint]
 select = [
@@ -58,6 +58,9 @@ ignore_missing_imports = false
 check_untyped_defs = true
 disallow_untyped_defs = true
 ignore_errors = false
+disable_error_code = ["import-untyped"]
+# You can exclude files with the following (ONLY WHEN NECESSARY)
+# exclude = ["path/to/file"]
 
 [tool.coverage.report]
 omit = [
