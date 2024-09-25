@@ -11,7 +11,6 @@ variables:
 
 before_script:
   - curl https://code.ornl.gov/rse-deployment/rse-sharables/raw/master/rse-bash-modules.sh -O
-  - docker login -u $NDIP_DOCKER_USER -p $NDIP_DOCKER_PASSWORD $NDIP_DOCKER_REPOSITORY
   - source rse-bash-modules.sh
   - func_rse_docker_cleanup
 
@@ -27,6 +26,8 @@ lint-check:
     - docker run -u `id -u`:`id -g` image poetry run ruff check
     - docker run -u `id -u`:`id -g` image poetry run ruff format --check
     - docker run -u `id -u`:`id -g` image poetry run mypy .
+    - docker tag image ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
+    - docker push ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
   tags:
     - rse-multi-builder
 
@@ -34,13 +35,10 @@ unit-tests:
   stage: test
   script:
     - mkdir reports
-    - docker build -f dockerfiles/Dockerfile --target source -t image .
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports image poetry run coverage run
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports image poetry run coverage report
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports image poetry run coverage xml -o reports/coverage.xml
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} poetry run coverage run
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} poetry run coverage report
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} poetry run coverage xml -o reports/coverage.xml
     - sed -i "s:<source>/src:<source>${CI_BUILDS_DIR}/${CI_PROJECT_PATH}:" reports/coverage.xml
-    - docker tag image ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
-    - docker push ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
 
   coverage: '/TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
