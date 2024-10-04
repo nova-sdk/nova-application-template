@@ -72,11 +72,11 @@ command_line = "-m pytest --junit-xml=reports/junit.xml"
 data_file = "reports/.coverage"
 
 [tool.poetry.dev-dependencies]
-mypy = "^1.10.0"
-pre-commit = "^2.20.0"
-coverage = "^6.4.3"
+mypy = ">=1.10.0"
+pre-commit = ">=2.20.0"
+coverage = ">=6.4.3"
 pytest = "*"
-ruff = "^0.6.2"
+ruff = ">=0.6.2"
 
 [tool.poetry.scripts]
 {{ project_name }} = "{{ project_name }}:main"

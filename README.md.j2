@@ -62,6 +62,17 @@ poetry run coverage run
 poetry run coverage report
 ```
 
+## Updating project from template
+
+This project was created from a [template]({{ _src_path }}) using [copier](https://copier.readthedocs.io/). If the template has changed, you
+can try to update the project to incorporate these changes. Just enter the project folder, make sure `git status`
+shows it clean, and run:
+```
+copier update
+```
+See [here](https://copier.readthedocs.io/en/stable/updating/#updating-a-project) for more information.
+
+
 ## CI/CD in GitLab
 
 Take a look at the `.gitlab-ci.yml` file. It configures pipelines to run in [GitLab](https://code.ornl.gov/ndip/project-templates/python/-/pipelines).
