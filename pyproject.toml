@@ -51,7 +51,7 @@ ignore = [
 
 
 [tool.ruff.lint.pydocstyle]
-convention = "google"
+convention = "numpy"
 
 [tool.mypy]
 ignore_missing_imports = false
