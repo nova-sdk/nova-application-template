@@ -20,6 +20,7 @@ after_script:
 test-template:
   stage: test
   script:
+    - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
     - docker run -u `id -u`:`id -g` image poetry run ruff check
     - docker run -u `id -u`:`id -g` image poetry run ruff format --check
