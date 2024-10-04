@@ -1,12 +1,10 @@
-Python project template
+{{ project_name }}
 =======================
 
 # Introduction
 
-This repository is a template repository for Python projects for NDIP (and, in the future, NOVA).
-After you create a new repository using this repo as template, please adjust it for the new project.
+This is the repository for {{ project_name }} project.
 
--  Change the name of the package in `pyproject.toml` and rename `/src/app`folder.
 - Add other Python dependencies you project need `poetry add xxx` or `poetry add --dev xxx`
 - Modify Dockerfile as needed. Please make sure it can still run as non-root (we use it in GitLab CI/CD and in general this
 is a good practice).
@@ -32,7 +30,7 @@ poetry install --no-root
 ## Running
 ### From source
 ```bash
-poetry run app
+poetry run {{ project_name }}
 ```
 
 ### Using Docker
@@ -40,7 +38,7 @@ poetry run app
 # build from source
 docker build -f dockerfiles/Dockerfile -t app_image .
 # run a container
-docker run app
+docker run {{ project_name }}
 ```
 
 ## Formatting

@@ -5,7 +5,7 @@ description = "Template application"
 authors = []
 readme = "README.md"
 license = "MIT"
-keywords = ["NDIP", "template", "python"]
+keywords = ["NDIP", "python"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -79,4 +79,4 @@ pytest = "*"
 ruff = "^0.6.2"
 
 [tool.poetry.scripts]
-app = "app:main"
+{{ project_name }} = "{{ project_name }}:main"
