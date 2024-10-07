@@ -1,6 +1,3 @@
-
-
-
 FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/python:3.10-slim AS source
 
 # make sure image can run as non-root user
@@ -26,7 +23,7 @@ FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/ubuntu:22.04 AS run
 
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get -y install tzdata
 RUN apt-get install -y python3.10 curl
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+RUN curl -ksS https://bootstrap.pypa.io/get-pip.py | python3.10
 
 COPY --from=source /src/dist /dist
 RUN pip install /dist/*.whl
