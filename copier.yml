@@ -1,0 +1,10 @@
+_subdirectory: template_sources
+_templates_suffix: .j2
+_exclude:
+    - copier.yml
+    - "*.py[co]"
+    - __pycache__
+    - .git
+project_name:
+    type: str
+    help: What is your project name?
