@@ -5,6 +5,13 @@ _exclude:
     - "*.py[co]"
     - __pycache__
     - .git
+    - name-slug
+
 project_name:
     type: str
     help: What is your project name?
+
+python_package:
+    type: str
+    help: A Python package name
+    default: "{% include 'name_slug.j2' %}"
