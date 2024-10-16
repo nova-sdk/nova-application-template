@@ -18,7 +18,7 @@ test-template:
   stage: test
   hooks:
     pre_get_sources_script:
-    - sudo chown gitlab -R ${CI_PROJECT_DIR}
+    - sudo chown gitlab-runner -R ${CI_PROJECT_DIR}
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
