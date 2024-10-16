@@ -11,7 +11,7 @@ RUN git config --global user.email "test"
 RUN git config --global user.name "test"
 
 COPY . /template
-RUN copier copy -d "project_name=test" template src
+RUN copier copy -d "project_name=Test Project" -l template src
 WORKDIR /src
 
 RUN poetry install

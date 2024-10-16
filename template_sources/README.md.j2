@@ -30,15 +30,15 @@ poetry install --no-root
 ## Running
 ### From source
 ```bash
-poetry run {{ project_name }}
+poetry run {{ python_package }}
 ```
 
 ### Using Docker
 ```bash
 # build from source
-docker build -f dockerfiles/Dockerfile -t app_image .
+docker build -f dockerfiles/Dockerfile -t {{ python_package }} .
 # run a container
-docker run {{ project_name }}
+docker run {{ python_package }}
 ```
 
 ## Formatting
@@ -75,7 +75,7 @@ See [here](https://copier.readthedocs.io/en/stable/updating/#updating-a-project)
 
 ## CI/CD in GitLab
 
-Take a look at the `.gitlab-ci.yml` file. It configures pipelines to run in [GitLab](https://code.ornl.gov/ndip/project-templates/python/-/pipelines).
+Take a look at the `.gitlab-ci.yml` file. It configures pipelines to run in GitLab.
 Some jobs will run automatically on each commit, jobs to
-build packages and Docker images need to be trigerred manually. Don't forget to set versions properly:
+build packages and Docker images need to be triggered manually. Don't forget to set versions properly:
 in `pyproject.toml` for python package and in `.gitlab-ci.yml` for Docker tag.

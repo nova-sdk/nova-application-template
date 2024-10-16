@@ -1,8 +1,8 @@
 """Test package."""
 
-from {{ project_name }} import MainClass
+from {{ python_package }} import MainClass
 
 
 def test_version() -> None:
-    {{ project_name }} = MainClass()
-    assert {{ project_name }}.name("test") == "test"
+    {{ python_package }} = MainClass()
+    assert {{ python_package }}.name("test") == "test"

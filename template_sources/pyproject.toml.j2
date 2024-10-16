@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "{{ project_name }}"
+name = "{{ python_package }}"
 version = "0.1.0"
 description = "Template application"
 authors = []
@@ -80,4 +80,4 @@ ruff = ">=0.6.2"
 copier=">=9.3"
 
 [tool.poetry.scripts]
-{{ project_name }} = "{{ project_name }}:main"
+{{ python_package }} = "{{ python_package }}:main"
