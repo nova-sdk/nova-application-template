@@ -16,10 +16,11 @@ Install copier, if needed:
 pip install copier
 ```
 
-and use it to create the project
+and use it to create the project. It will ask you several questions, 
+starting with the project name.
 
 ```commandline
-copier copy https://code.ornl.gov/ndip/project-templates/python.git test_project
+copier copy https://code.ornl.gov/ndip/project-templates/python.git project_folder
 ```
 
 ## Updating project from template

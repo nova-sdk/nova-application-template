@@ -13,5 +13,15 @@ project_name:
 
 python_package:
     type: str
-    help: A Python package name
+    help: What is your Python package name (use Python naming conventions)?
     default: "{% include 'name_slug.j2' %}"
+
+publish_to_pypi:
+    type: bool
+    help: Publish to PiPy?
+    default: no
+
+publish_docs:
+    type: bool
+    help: Publish documentation to readthedocs.io?
+    default: no

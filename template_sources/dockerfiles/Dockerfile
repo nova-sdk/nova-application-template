@@ -14,9 +14,8 @@ WORKDIR /src
 RUN poetry install
 RUN poetry build --format=wheel
 
-RUN chmod og+rwX /poetry
-RUN chmod og+rwX /src
-
+RUN chmod og+rwX -R /poetry
+RUN chmod og+rwX -R /src
 
 
 FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/ubuntu:22.04 AS run
