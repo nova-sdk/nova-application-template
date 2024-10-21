@@ -18,7 +18,7 @@ python_package:
 
 publish_to_pypi:
     type: bool
-    help: Publish to PiPy?
+    help: Publish to PyPI?
     default: no
 
 publish_docs:
