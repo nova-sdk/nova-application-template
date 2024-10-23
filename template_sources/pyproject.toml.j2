@@ -83,4 +83,4 @@ sphinx-rtd-theme = "*"
 sphinxcontrib-napoleon ="*"
 
 [tool.poetry.scripts]
-{{ python_package }} = "{{ python_package }}:main"
+app = "{{ python_package | replace('-', '_') }}:main"

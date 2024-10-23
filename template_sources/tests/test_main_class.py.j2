@@ -1,8 +1,8 @@
 """Test package."""
 
-from {{ python_package }} import MainClass
+from {{ python_package | replace('-', '_') }} import MainClass
 
 
 def test_version() -> None:
-    {{ python_package }} = MainClass()
-    assert {{ python_package }}.name("test") == "test"
+    app = MainClass()
+    assert app.name("test") == "test"
