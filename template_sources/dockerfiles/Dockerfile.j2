@@ -1,8 +1,6 @@
 FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/python:3.10-slim AS source
 
 # make sure image can run as non-root user
-
-
 ENV POETRY_CACHE_DIR=/poetry/.cache
 ENV POETRY_CONFIG_DIR=/poetry/.config
 ENV POETRY_HOME=/poetry
@@ -18,11 +16,20 @@ RUN chmod og+rwX -R /poetry
 RUN chmod og+rwX -R /src
 
 
+{% if use_mantid -%}
+FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/kitware/trame:py3.10-conda-2024-11 AS run
+
+RUN conda create --yes -n {{ python_package }} -c conda-forge -c mantid python=3.10 mantid
+SHELL ["conda", "run", "-n", "{{ python_package }}", "/bin/bash", "-c"]
+ENTRYPOINT [ "conda", "run", "--no-capture-output", "-n", "{{ python_package }}" ]
+
+{%- else %}
 FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/ubuntu:22.04 AS run
 
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get -y install tzdata
 RUN apt-get install -y python3.10 curl
 RUN curl -ksS https://bootstrap.pypa.io/get-pip.py | python3.10
+{%- endif %}
 
 COPY --from=source /src/dist /dist
 RUN pip install /dist/*.whl
