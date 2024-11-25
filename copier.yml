@@ -16,6 +16,11 @@ python_package:
     help: What is your Python package name (use Python naming conventions)?
     default: "{% include 'name_slug.j2' %}"
 
+use_mantid:
+    type: bool
+    help: Do you want to install Mantid for your project?
+    default: no
+
 publish_to_pypi:
     type: bool
     help: Publish to PyPI?
