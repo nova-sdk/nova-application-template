@@ -1,3 +1,11 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - when: always
+
 stages:
   - lint
   - test
@@ -85,8 +93,7 @@ build-image:
   when: manual
   script:
     - IMAGE_TAG=${VERSION}
-    - docker pull ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
-    - docker build -f dockerfiles/Dockerfile -t image .
+    - docker build -f dockerfiles/Dockerfile -t image --target run --build-arg SOURCE_IMAGE=${IMAGE_NAME}:src-${CI_COMMIT_SHA} .
     - docker tag image ${IMAGE_NAME}:bin-${CI_COMMIT_SHA}
     - docker push ${IMAGE_NAME}:bin-${CI_COMMIT_SHA}
     - docker tag image ${IMAGE_NAME}:latest
