@@ -1,0 +1,11 @@
+# Please do not edit or delete this file. It is needed to be able to update project from template.
+_commit: 0.10-2-g51048fb
+_src_path: /Users/35y/projects/ndip/templates/python
+framework: Trame
+gui: true
+multitabs: true
+project_name: Test Trame
+publish_docs: false
+publish_to_pypi: false
+python_package: test-trame
+use_mantid: false
