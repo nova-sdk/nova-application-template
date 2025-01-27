@@ -21,6 +21,27 @@ use_mantid:
     help: Do you want to install Mantid for your project?
     default: no
 
+gui:
+    type: bool
+    help: Are you developing a GUI application using MVVM pattern?
+    default: no
+
+framework:
+    type: str
+    help: Which library will you use?
+    choices:
+        - Trame
+        - PyQT5
+        - PyQT6
+    default: Trame
+    when: "{{ gui }}"
+
+multitabs:
+    type: bool
+    help: Do you want a template with multiple tabs?
+    default: no
+    when: "{{ gui }}"
+
 publish_to_pypi:
     type: bool
     help: Publish to PyPI?

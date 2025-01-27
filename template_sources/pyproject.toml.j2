@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "{{ python_package }}"
 version = "0.1.0"
-description = "Template application"
+description = "{{ project_name }} Project"
 authors = []
 readme = "README.md"
 license = "MIT"
@@ -14,6 +14,14 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
+{% if gui  -%}
+{% if framework=="Trame" -%}
+nova-trame = "*"
+{% else -%}
+nova-mvvm = {extras = ["{{ framework | lower }}"], version = "*"}
+{{ framework | lower  }}-webengine="*"
+{% endif -%}
+{% endif -%}
 
 [build-system]
 requires = ["poetry-core"]
@@ -86,4 +94,9 @@ sphinxcontrib-napoleon ="*"
 tomli = "*"
 
 [tool.poetry.scripts]
+{% if gui  -%}
+app = "{{ python_package | replace('-', '_') }}.app:main"
+{% else -%}
 app = "{{ python_package | replace('-', '_') }}:main"
+{% endif -%}
+
