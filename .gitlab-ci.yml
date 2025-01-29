@@ -15,29 +15,33 @@ after_script:
   - source rse-bash-modules.sh
   - func_rse_docker_cleanup
 
-test-template:
+test-cli-template:
   stage: test
   hooks:
     pre_get_sources_script:
-    - sudo chown gitlab-runner -R ${CI_PROJECT_DIR}
+    - 'test -d "${CI_PROJECT_DIR}" && sudo chown gitlab-runner -R "${CI_PROJECT_DIR}" ||:'
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
     - docker run -u `id -u`:`id -g` image poetry run ruff check
     - docker run -u `id -u`:`id -g` image poetry run ruff format --check
     - docker run -u `id -u`:`id -g` image poetry run mypy .
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports image poetry run coverage run
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports image poetry run coverage xml -o reports/coverage.xml
-    - sed -i "s:<source>/src:<source>${CI_BUILDS_DIR}/${CI_PROJECT_PATH}:" reports/coverage.xml
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports image poetry run pytest .
+  tags:
+    - rse-multi-builder
 
-  coverage: '/TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
-  artifacts:
-    when: always
-    reports:
-      junit: reports/junit.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: reports/coverage.xml
+test-trame-template:
+  stage: test
+  hooks:
+    pre_get_sources_script:
+    - 'test -d "${CI_PROJECT_DIR}" && sudo chown gitlab-runner -R "${CI_PROJECT_DIR}" ||:'
+  script:
+    - mkdir reports
+    - docker build -f dockerfiles/Dockerfile -t image .
+    - docker run -u `id -u`:`id -g` -w /src_trame image poetry run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_trame image poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_trame image poetry run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_trame image poetry run pytest .
   tags:
     - rse-multi-builder
 

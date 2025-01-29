@@ -1,6 +1,6 @@
 """Test package."""
 
-from {{ python_package | replace('-', '_') }} import MainClass
+from {% include 'package_slug.j2' %} import MainClass
 
 
 def test_version() -> None:

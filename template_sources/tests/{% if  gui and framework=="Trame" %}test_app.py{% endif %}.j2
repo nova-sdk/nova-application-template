@@ -1,0 +1,8 @@
+"""Test package for application."""
+
+from {% include 'package_slug.j2' %}.app.views.main import MainApp
+
+
+def test_app() -> None:
+    app = MainApp()
+    assert app

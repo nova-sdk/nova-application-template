@@ -1,0 +1,8 @@
+framework: Trame
+gui: true
+multitabs: true
+project_name: Test Trame
+publish_docs: false
+publish_to_pypi: false
+python_package: test-trame
+use_mantid: false
