@@ -20,7 +20,7 @@ and use it to create the project. It will ask you several questions,
 starting with the project name.
 
 ```commandline
-copier copy https://code.ornl.gov/ndip/project-templates/python.git project_folder
+copier copy https://code.ornl.gov/ndip/project-templates/nova-application-template.git project_folder
 ```
 
 ## Updating project from template
