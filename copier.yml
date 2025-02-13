@@ -31,8 +31,8 @@ framework:
     help: Which library will you use?
     choices:
         - Trame
-        - PyQT5
-        - PyQT6
+        - PyQt5
+        - PyQt6
     default: Trame
     when: "{{ gui }}"
 
@@ -40,7 +40,7 @@ multitabs:
     type: bool
     help: Do you want a template with multiple tabs?
     default: no
-    when: "{{ gui }}"
+    when: "{{ gui and framework=='Trame' }}"
 
 publish_to_pypi:
     type: bool
