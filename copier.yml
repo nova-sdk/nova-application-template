@@ -51,3 +51,24 @@ publish_docs:
     type: bool
     help: Publish documentation to readthedocs.io?
     default: no
+
+_message_after_copy: |
+    Your project "{{ project_name }}" has been created successfully!
+
+    Next steps:
+
+    1. Change directory to the project root:
+
+       $ cd {{ _copier_conf.dst_path }}
+
+    2. Read "DEVELOPMENT.md".
+    
+    3. Install project dependencies and setup pre-commit
+        $ poetry install
+        $ git init
+        $ pre-commit install    
+    4. Test if the application runs
+        $ poetry run app
+        
+        if there are any problems with dependencies (like PyQT) you might need to install/update system libraries.
+    5. Start coding :).
