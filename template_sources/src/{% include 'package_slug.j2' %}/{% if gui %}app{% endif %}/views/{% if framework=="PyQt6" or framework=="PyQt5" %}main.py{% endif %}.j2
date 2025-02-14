@@ -1,0 +1,141 @@
+"""Main file."""
+
+import sys
+from typing import Any
+
+from nova.mvvm.pydantic_utils import get_field_info, validate_pydantic_parameter
+{%- if framework=="PyQt6" %}
+from nova.mvvm.pyqt6_binding import PyQt6Binding
+{%- else %}
+from nova.mvvm.pyqt5_binding import PyQt5Binding
+{%- endif %}
+from {{ framework }}.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
+
+from ..models.main_model import MainModel
+from ..mvvm_factory import create_viewmodels
+from ..view_models.main import MainViewModel
+
+
+class TabView(QTabWidget):
+    """Tab View class."""
+
+    def __init__(self, view_model: MainViewModel):
+        super().__init__()
+
+        self.view_model = view_model
+
+        # connect bind created by the ViewModel with GUI representation.
+        # In this case, we bind config to functions that take care of specific GUI element update
+        # This way ViewModel will be able to trigger GUI change by calling update_in_view of the config_bind
+        # also, connect returns a callback function can be used to update the bounded variable in the Model
+        self.callback_config = self.view_model.config_bind.connect("config", self.on_config_update)
+
+        self.create_ui()
+        self.view_model.update_view()
+
+    def on_config_update(self, config: MainModel) -> None:
+        self.username_edit_box.setText(config.username)
+        self.password_edit_box.setText(config.password)
+
+    def validate_element(self, key: str, value: Any, element: Any = None) -> None:
+        if element:
+            res = validate_pydantic_parameter(key, value)
+            if res is not True:
+                element.setStyleSheet("border: 1px solid red;")
+                print(f"from view: {res}")
+            else:
+                element.setStyleSheet("")
+
+    def process_config_change(self, key: str, value: Any, element: Any = None) -> None:
+        self.validate_element(key, value, element)
+        self.callback_config(key, value)
+
+    def create_ui(self) -> None:
+        self.tab1 = QWidget()
+        self.tab2 = QWidget()
+
+        self.addTab(self.tab1, "Tab 1")
+        self.addTab(self.tab2, "Tab 2")
+
+        self.init_tab1()
+        self.init_tab2()
+
+    def get_title(self, field: str, default: str = "") -> str:
+        try:
+            field_info = get_field_info(field)
+            return field_info.title
+        except Exception:
+            return default
+
+    def init_tab1(self) -> None:
+        layout = QVBoxLayout()
+
+        hbox = QHBoxLayout()
+        label = QLabel(self.get_title("config.username"))
+        hbox.addWidget(label)
+        self.username_edit_box = QLineEdit()
+        self.username_edit_box.textChanged.connect(
+            lambda text: self.process_config_change("config.username", text, self.username_edit_box)
+        )
+
+        hbox.addWidget(self.username_edit_box)
+        layout.addLayout(hbox)
+        self.tab1.setLayout(layout)
+
+    def init_tab2(self) -> None:
+        layout = QVBoxLayout()
+        hbox = QHBoxLayout()
+        label = QLabel(self.get_title("config.password"))
+        hbox.addWidget(label)
+        self.password_edit_box = QLineEdit()
+        self.password_edit_box.textChanged.connect(
+            lambda text: self.process_config_change("config.password", text, self.password_edit_box)
+        )
+        hbox.addWidget(self.password_edit_box)
+        layout.addLayout(hbox)
+        self.tab2.setLayout(layout)
+
+
+class View(QMainWindow):
+    """Main view class."""
+
+    def __init__(self) -> None:
+        super().__init__()
+{%- if framework=="PyQt6" %}
+        binding = PyQt6Binding()
+{%- else %}
+        binding = PyQt5Binding()
+{%- endif %}
+        self.view_models = create_viewmodels(binding)
+        self.view_model: MainViewModel = self.view_models["main"]
+        self.create_ui()
+
+    def create_ui(self) -> None:
+        self.setWindowTitle("{{ project_name }}")
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        layout = QVBoxLayout(self.central_widget)
+
+        self.tabs = TabView(self.view_model)
+        layout.addWidget(self.tabs)
+
+
+class MainApp:
+    """PyQT Application entrypoint."""
+
+    def __init__(self) -> None:
+        self.app = QApplication(sys.argv)
+        self.view = View()
+
+    def start(self) -> None:
+        self.view.show()
+        sys.exit(self.app.exec())

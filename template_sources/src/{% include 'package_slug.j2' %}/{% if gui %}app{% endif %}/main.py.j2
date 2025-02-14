@@ -1,9 +1,9 @@
 """Main Application."""
+{%- if framework=="Trame" %}
 
 import sys
 
 
-{% if framework=="Trame" -%}
 def main() -> None:
     kwargs = {}
     from .views.main import MainApp
@@ -16,9 +16,12 @@ def main() -> None:
         except Exception:
             pass
     app.server.start(**kwargs)
-{% else -%}
-def main():
-    from .views.pyqt.main import PyQtApp
-    app = PyQtApp()
+{%- else %}
+
+
+def main() -> None:
+    from .views.main import MainApp
+
+    app = MainApp()
     app.start()
-{% endif -%}
+{%- endif %}

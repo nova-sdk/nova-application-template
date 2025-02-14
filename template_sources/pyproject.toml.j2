@@ -19,7 +19,6 @@ python = "^3.10"
 nova-trame = "*"
 {% else -%}
 nova-mvvm = {extras = ["{{ framework | lower }}"], version = "*"}
-{{ framework | lower  }}-webengine="*"
 {% endif -%}
 {% endif -%}
 
