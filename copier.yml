@@ -13,7 +13,7 @@ project_name:
 
 python_package:
     type: str
-    help: What is your Python package name (use Python naming conventions)?
+    help: What is your Python package name (use Python naming conventions, use dots to create submodules)?
     default: "{% include 'name_slug.j2' %}"
 
 use_mantid:

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "{{ python_package }}"
+name = "{{ python_package | replace('.', '-') }}"
 version = "0.1.0"
 description = "{{ project_name }} Project"
 authors = []
@@ -8,7 +8,7 @@ license = "MIT"
 keywords = ["NDIP", "NOVA", "python"]
 
 packages = [
-  { include = "{{ python_package | replace('-', '_') }}", from = "src" }
+  { include = "{{ python_package.split('.')[0] | replace('-', '_') }}", from = "src" }
 ]
 
 
