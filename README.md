@@ -41,7 +41,7 @@ See [here](https://copier.readthedocs.io/en/stable/updating/#updating-a-project)
 For development purposes, one can (and probably have to) create a project out of the template
 to make sure it looks how it should be.
 
-Just call _copier copy_ command with a path to the local folder with this repository.
+Just call _copier copy --vcs-ref=HEAD_ command with a path to the local folder with this repository.
 We do this in CI/CD pipeline (via Docker) when we run tests.
 
 ```commandline
