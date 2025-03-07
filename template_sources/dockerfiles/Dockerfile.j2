@@ -30,7 +30,6 @@ FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/kitware/trame:py3.10-conda-202
 RUN conda create --yes -n {{ python_package }} -c conda-forge -c mantid python=3.10 mantid
 SHELL ["conda", "run", "-n", "{{ python_package }}", "/bin/bash", "-c"]
 ENTRYPOINT [ "conda", "run", "--no-capture-output", "-n", "{{ python_package }}" ]
-
 {%- else %}
 FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/ubuntu:22.04 AS run
 
@@ -41,3 +40,22 @@ RUN curl -ksS https://bootstrap.pypa.io/get-pip.py | python3.10
 
 COPY --from=source_image /src/dist /dist
 RUN pip install /dist/*.whl
+
+{% if gui and framework == 'Trame' -%}
+RUN pip install supervisor
+
+RUN apt update && apt install -y gettext nginx wget
+
+COPY dockerfiles/nginx.conf.template /etc/nginx/nginx.conf.template
+COPY dockerfiles/supervisord.conf /etc/supervisord.conf
+COPY scripts/run_nginx.sh /
+COPY scripts/run_trame.sh /
+
+RUN python3.10 -m trame.tools.www --client-type vue3 --output /app/www-content
+
+# Get the static JS from nova-trame and add it to our client build
+RUN mkdir -p /app/www-content/assets/js
+RUN export NOVA_TRAME_LOCATION=$(pip show nova-trame | grep "Location" | awk '{ print $2 }')/nova/trame; cp $NOVA_TRAME_LOCATION/view/theme/assets/js/*.js /app/www-content/assets/js/
+
+CMD [ "supervisord" ]
+{%- endif -%}
