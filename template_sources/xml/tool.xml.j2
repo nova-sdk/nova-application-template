@@ -1,0 +1,16 @@
+<tool id="{% if is_tutorial %}nova-{{ username }}-tutorial{% else %}{{ project_name.lower().replace(' ', '-').replace('_', '-') }}{% endif %}" name="{% if is_tutorial %}Nova {{ username }} Tutorial{% else %}{{ project_name }}{% endif %}" version="@TOOL_VERSION@" profile="22.01">
+    <description>{% if is_tutorial %}Nova {{ username }} Tutorial{% else %}{{ project_name }}{% endif %} - A tool generated using the NOVA Application Template</description>
+    <requirements>
+        <container type="docker">@CONTAINER_REGISTRY@/@CONTAINER_PATH@:@CONTAINER_TAG@</container>
+    </requirements>
+     <command><![CDATA[
+        python -m nova_tutorial.app
+    ]]></command>
+    <help><![CDATA[
+        **{% if is_tutorial %}Nova {{ username }} Tutorial{% else %}{{ project_name }}{% endif %}**
+        
+        This is a Galaxy tool for {% if is_tutorial %}Nova {{ username }} Tutorial{% else %}{{ project_name }}{% endif %}.
+        
+        For more information, see the repository: https://code.ornl.gov/ndip/tool-sources/{% if is_tutorial %}tutorial/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}{% else %}{{ project_group }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}{% endif %}
+    ]]></help>
+</tool>

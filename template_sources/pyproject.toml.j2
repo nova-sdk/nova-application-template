@@ -11,9 +11,14 @@ packages = [
   { include = "{{ python_package.split('.')[0] | replace('-', '_') }}", from = "src" }
 ]
 
+include = [
+  "xml/*.xml"
+]
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
+gitpython = "^3.1.40"
 {% if gui  -%}
 {% if framework=="Trame" -%}
 nova-trame = "*"
@@ -98,4 +103,6 @@ app = "{{ python_package | replace('-', '_') }}.app:main"
 {% else -%}
 app = "{{ python_package | replace('-', '_') }}:main"
 {% endif -%}
+init-repo = "{{ python_package | replace('-', '_') }}.scripts.git_utils:init_repository"
+push-xml = "{{ python_package | replace('-', '_') }}.scripts.xml_utils:push_tool_xml"
 

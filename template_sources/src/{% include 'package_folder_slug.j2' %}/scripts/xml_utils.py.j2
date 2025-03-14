@@ -1,0 +1,115 @@
+"""Utility for pushing tool XML to Galaxy tools repository."""
+
+import os
+import sys
+import tempfile
+from pathlib import Path
+
+import git
+
+
+def push_tool_xml() -> None:
+    """
+    Push the tool XML file to the Galaxy tools XML repository.
+
+    This clones the tools repository, adds/updates the tool XML file,
+    and pushes the changes back to the repository.
+    """
+    try:
+        # XML source file in the current project
+        xml_source = Path("xml/tool.xml")
+        if not xml_source.exists():
+            print(f"Error: Tool XML file not found at {xml_source}", file=sys.stderr)
+            sys.exit(1)
+
+        # Get current project version for container tag
+        try:
+            with open("pyproject.toml", "r") as f:
+                for line in f:
+                    if line.startswith("version = "):
+                        version = line.split("=")[1].strip().strip("\"'")
+                        break
+        except Exception:
+            version = "latest"
+
+        # Temporary directory for Galaxy tools repo
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Clone Galaxy tools repository
+            galaxy_tools_repo = "https://code.ornl.gov/ndip/galaxy-tools.git"
+            print(f"Cloning Galaxy tools repository: {galaxy_tools_repo}")
+
+            try:
+                repo = git.Repo.clone_from(galaxy_tools_repo, temp_dir)
+            except git.GitCommandError as e:
+                print(f"Error cloning repository: {e}", file=sys.stderr)
+                sys.exit(1)
+
+            repo.git.checkout("prototype")
+            # Destination path within the tools repo
+            {% if is_tutorial -%}
+            dest_dir = os.path.join(temp_dir, "tools", "neutrons", "tutorials")
+            xml_filename = "{{ username.lower() }}-{{ project_name.lower().replace(' ', '-').replace('_', '-') }}.xml"
+            {% else -%}
+            dest_dir = os.path.join(temp_dir, "tools", "neutrons")
+            xml_filename = "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}.xml"
+            {% endif -%}
+
+            # Create destination directory if it doesn't exist
+            os.makedirs(dest_dir, exist_ok=True)
+
+            # XML destination in the Galaxy tools repo
+            xml_dest = os.path.join(dest_dir, xml_filename)
+
+            # Read the source XML
+            with open(xml_source, "r") as src_file:
+                xml_content = src_file.read()
+
+            # Replace placeholders with actual values
+            container_registry = "code.ornl.gov:4567"
+            {% if is_tutorial -%}
+            container_path = "ndip/tool-sources/tutorial/{{ username.lower() }}-{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+            {% else -%}
+            container_path = "ndip/tool-sources/{{ project_group }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+            {% endif -%}
+
+            xml_content = xml_content.replace("@TOOL_VERSION@", version)
+            xml_content = xml_content.replace("@CONTAINER_REGISTRY@", container_registry)
+            xml_content = xml_content.replace("@CONTAINER_PATH@", container_path)
+            xml_content = xml_content.replace("@CONTAINER_TAG@", version)
+
+            # Write the modified XML to the destination
+            with open(xml_dest, "w") as dest_file:
+                dest_file.write(xml_content)
+
+            # Check for changes
+            has_changes = False
+            if repo.is_dirty(untracked_files=True) or xml_dest not in [item.a_path for item in repo.index.diff(None)]:
+                has_changes = True
+
+            if has_changes:
+                # Add the XML file
+                repo.git.add(xml_dest)
+
+                # Commit changes
+                commit_msg = "Add/update tool XML for {{ project_name }}"
+                repo.git.commit("-m", commit_msg)
+
+                # Push changes to prototype branch
+                print("Pushing XML to Galaxy tools repository (prototype branch)...")
+
+                # Push to prototype branch
+                repo.git.push("--set-upstream", "origin", "prototype")
+                print("Tool XML successfully pushed to Galaxy tools repository (prototype branch)!")
+            else:
+                print("No changes to commit - XML file is already up to date.")
+
+    except git.GitCommandError as e:
+        print(f"Git error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    push_tool_xml()
