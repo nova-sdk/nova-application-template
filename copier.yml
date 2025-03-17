@@ -16,21 +16,6 @@ python_package:
     help: What is your Python package name (use Python naming conventions, use dots to create submodules)?
     default: "{% include 'name_slug.j2' %}"
 
-is_tutorial:
-    type: bool
-    help: Are you building this application as part of the Galaxy tutorial?
-    default: no
-
-username:
-    type: str
-    help: What is your username? (Will be included in tool ID and name)
-    when: "{{ is_tutorial }}"
-
-project_group:
-    type: str
-    help: What is your project group name? (Will be used in repository path)
-    when: "{{ not is_tutorial }}"
-
 use_mantid:
     type: bool
     help: Do you want to install Mantid for your project?
@@ -86,7 +71,7 @@ _message_after_copy: |
        $ poetry run init-repo
        
        This will set up the repository at:
-       https://code.ornl.gov/ndip/tool-sources/{% if is_tutorial %}tutorial/{{ username.lower() }}-{{ project_name.lower().replace(' ', '-').replace('_', '-') }}{% else %}{{ project_group }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}{% endif %}
+       https://code.ornl.gov/ndip/tool-sources/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}
     
     5. Push the tool XML file to the Galaxy tools repository:
        $ poetry run push-xml
