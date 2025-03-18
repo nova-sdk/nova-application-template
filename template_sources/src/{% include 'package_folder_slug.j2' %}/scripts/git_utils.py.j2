@@ -16,7 +16,7 @@ def init_repository() -> None:
         # Determine repository path
         remote_url = "https://code.ornl.gov/ndip/tool-sources/"
         remote_url += "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
-        
+
         # Initialize git repository if not already initialized
         if not Path(".git").exists():
             print("Initializing git repository...")
