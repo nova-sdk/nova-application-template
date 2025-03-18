@@ -17,18 +17,14 @@ def check_docker_image_exists(image_url: str) -> bool:
         image_url: The full URL of the Docker image including registry and tag
 
     Returns:
+    -------
         bool: True if the image exists, False otherwise
     """
 
     try:
         # Using subprocess to run the docker pull command to check image existence
         # The '--quiet' option minimizes output
-        result = subprocess.run(
-            ["docker", "pull", image_url],
-            capture_output=True,
-            text=True,
-            check=False
-        )
+        result = subprocess.run(["docker", "pull", image_url], capture_output=True, text=True, check=False)
 
         # If the command exited with 0, the image exists
         return result.returncode == 0
