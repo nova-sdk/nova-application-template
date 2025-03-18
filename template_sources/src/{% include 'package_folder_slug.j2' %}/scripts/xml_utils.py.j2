@@ -85,7 +85,7 @@ def push_tool_xml() -> None:
                 xml_content = src_file.read()
 
             # Replace placeholders with actual values
-            container_registry = "code.ornl.gov:4567"
+            container_registry = "savannah.ornl.gov"
             container_path = "ndip/tool-sources/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
 
             # Construct the full Docker image URL
