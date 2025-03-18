@@ -45,5 +45,5 @@ Just call _copier copy --vcs-ref=HEAD_ command with a path to the local folder w
 We do this in CI/CD pipeline (via Docker) when we run tests.
 
 ```commandline
-copier copy path_to_this_project test_project
+copier copy path_to_this_project test_project --vcs-ref=HEAD
 ```
