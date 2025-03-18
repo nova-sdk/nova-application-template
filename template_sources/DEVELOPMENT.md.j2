@@ -108,3 +108,29 @@ the URL and the secret from your readthedocs project (_click on your project, or
 and save them in GitLab (_Gitlab project->Settings->CI/CD->Variables->Add variable_).
 
 {%- endif %}
+
+{% if gui -%}
+
+### Documentation for calvera.ornl.gov/docs
+
+Please create a User Guide for {{ project_name }} and we can add it to our
+[site](https://calvera.ornl.gov/docs/user_guide/tools). The documentation is a standard markdown and should
+ be located in _docs/web/docs_ folder. We have already created some files there that give you an idea how it could look like. Please
+ modify as needed.
+
+ You can also build your guide locally:
+
+ Please make sure you have Node.js [installed](https://nodejs.org/en/download).
+
+ Then:
+
+```bash
+cd docs/web
+npm install
+npm run start
+```
+
+the documentation will be compiled and available at http://localhost:3000/. If you keep the server running, it will update the
+site as you modify the documents.
+
+{%- endif %}
