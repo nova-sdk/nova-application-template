@@ -94,9 +94,14 @@ def push_tool_xml() -> None:
             # Check if the Docker image exists
             image_exists = check_docker_image_exists(docker_image)
             if not image_exists:
-                print(f"Error: Docker image {docker_image} does not exist!", file=sys.stderr)
-                print("You must build and push the Docker image before pushing the XML.", file=sys.stderr)
-                sys.exit(1)
+                print(f"Warning: Docker image {docker_image} could not be verified.", file=sys.stderr)
+                print("You should build and push the Docker image before pushing the XML.", file=sys.stderr)
+
+                user_input = input("Continue anyway? (y/n): ").strip().lower()
+                if user_input != "y":
+                    print("Aborted by user.", file=sys.stderr)
+                    sys.exit(1)
+                print("Continuing without Docker image verification...", file=sys.stderr)
 
             xml_content = xml_content.replace("@TOOL_VERSION@", version)
             xml_content = xml_content.replace("@CONTAINER_REGISTRY@", container_registry)
