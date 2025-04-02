@@ -3,11 +3,13 @@
     <requirements>
         <container type="docker">@CONTAINER_REGISTRY@/@CONTAINER_PATH@:@CONTAINER_TAG@</container>
     </requirements>
+    {% if gui %}
     <entry_points>
         <entry_point name="NOVA Tutorial" label="tutorial" requires_domain="False" requires_path_in_url="True">
             <port>8081</port>
         </entry_point>
     </entry_points>
+    {% endif %}
      <command><![CDATA[
         {% if gui and framework == 'Trame' %}
         supervisord > >(tee -a $output) 2> >(tee -a $output >&2)
