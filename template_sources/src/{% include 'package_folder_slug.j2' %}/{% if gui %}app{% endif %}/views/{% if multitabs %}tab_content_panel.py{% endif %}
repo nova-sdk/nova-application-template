@@ -3,7 +3,7 @@
 from trame.widgets import vuetify3 as vuetify
 from trame_server import Server
 
-from ..view_models.main import MainViewModel
+from ..view_models.main_view_model import MainViewModel
 from .sample_tab_1 import SampleTab1
 from .sample_tab_2 import SampleTab2
 
