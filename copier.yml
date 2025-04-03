@@ -63,12 +63,24 @@ _message_after_copy: |
 
     2. Read "DEVELOPMENT.md"!
     
-    3. Install project dependencies and setup pre-commit
-        $ poetry install
-        $ git init
-        $ pre-commit install    
-    4. Test if the application runs
-        $ poetry run app
+    3. Install project dependencies and setup pre-commit:
+       $ poetry install
+       $ pre-commit install    
+    
+    4. Initialize Git repository and push to GitLab:
+       $ poetry run init-repo
+       
+       This will set up the repository at:
+       https://code.ornl.gov/ndip/tool-sources/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}
+    
+    5. Push the tool XML file to the Galaxy tools repository:
+       $ poetry run push-xml
+       
+       This will add/update your tool XML in the Galaxy tools repository.
+
+    6. Test if the application runs:
+       $ poetry run app
         
-        if there are any problems with dependencies (like PyQT) you might need to install/update system libraries.
-    5. Start coding :). Don't forget about writing documentation (see DEVELOPMENT.md)!
+       If there are any problems with dependencies (like PyQt) you might need to install/update system libraries.
+    
+    7. Start coding :) Don't forget about writing documentation (see DEVELOPMENT.md)!

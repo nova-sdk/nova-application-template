@@ -1,0 +1,71 @@
+"""Git repository utilities for project setup."""
+
+import sys
+from pathlib import Path
+
+import git
+
+
+def init_repository() -> None:
+    """
+    Initialize a git repository, make the initial commit, and push to GitLab.
+
+    This sets up the repo at https://code.ornl.gov/ndip/tool-sources/generic/
+    """
+    try:
+        # Determine repository path
+        # We need to organize the groups under tool sources and provide them an option of location
+        remote_url = "https://code.ornl.gov/ndip/tool-sources/generic/"
+        remote_url += "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+
+        # Initialize git repository if not already initialized
+        if not Path(".git").exists():
+            print("Initializing git repository...")
+            repo = git.Repo.init(".")
+        else:
+            repo = git.Repo(".")
+
+        # Ensure we're using 'main' as the default branch
+        if repo.active_branch.name != "main":
+            print("Setting default branch to 'main'...")
+            repo.git.branch("-m", repo.active_branch.name, "main")
+
+        # Setup remote
+        try:
+            repo.remote("origin")
+            # Update URL if it exists
+            print(f"Setting remote URL: {remote_url}")
+            repo.git.remote("set-url", "origin", remote_url)
+        except ValueError:
+            # Remote doesn't exist, create it
+            print(f"Adding remote: {remote_url}")
+            repo.create_remote("origin", remote_url)
+
+        # Add all files
+        print("Adding files to repository...")
+        repo.git.add(".")
+
+        # Make initial commit if needed
+        try:
+            _ = repo.head.commit  # assign to _ to avoid lint warning
+            print("Repository already has commits, skipping initial commit.")
+        except ValueError:
+            print("Making initial commit...")
+            repo.git.commit("-m", "Initial commit from NOVA Application Template")
+
+        # Push to remote
+        print(f"Pushing to {remote_url}...")
+        repo.git.push("--set-upstream", "origin", "main")
+
+        print("Repository successfully initialized and pushed!")
+
+    except git.GitCommandError as e:
+        print(f"Git error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error initializing repository: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    init_repository()
