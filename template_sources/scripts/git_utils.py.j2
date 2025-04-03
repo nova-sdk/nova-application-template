@@ -24,6 +24,11 @@ def init_repository() -> None:
             repo = git.Repo.init(".")
         else:
             repo = git.Repo(".")
+            
+        # Ensure we're using 'main' as the default branch
+        if repo.active_branch.name != "main":
+            print("Setting default branch to 'main'...")
+            repo.git.branch("-m", repo.active_branch.name, "main")
 
         # Setup remote
         try:
