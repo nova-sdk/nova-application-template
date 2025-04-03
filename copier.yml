@@ -49,7 +49,7 @@ publish_to_pypi:
 
 publish_docs:
     type: bool
-    help: Publish documentation to readthedocs.io?
+    help: Publish API documentation to readthedocs.io?
     default: no
 
 _message_after_copy: |
@@ -61,7 +61,7 @@ _message_after_copy: |
 
        $ cd {{ _copier_conf.dst_path }}
 
-    2. Read "DEVELOPMENT.md".
+    2. Read "DEVELOPMENT.md"!
     
     3. Install project dependencies and setup pre-commit:
        $ poetry install
@@ -83,4 +83,4 @@ _message_after_copy: |
         
        If there are any problems with dependencies (like PyQt) you might need to install/update system libraries.
     
-    7. Start coding :).
+    7. Start coding :) Don't forget about writing documentation (see DEVELOPMENT.md)!
