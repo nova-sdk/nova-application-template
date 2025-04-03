@@ -86,7 +86,7 @@ def push_tool_xml() -> None:
 
             # Replace placeholders with actual values
             container_registry = "savannah.ornl.gov"
-            container_path = "ndip/tool-sources/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+            container_path = "ndip/tool-sources/generic/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
 
             # Construct the full Docker image URL
             docker_image = f"{container_registry}/{container_path}:{version}"
