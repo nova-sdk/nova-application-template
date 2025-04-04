@@ -16,7 +16,7 @@
     </environment_variables>
      <command><![CDATA[
         {% if gui and framework == 'Trame' %}supervisord > >(tee -a $output) 2> >(tee -a $output >&2)
-        {% else %}python -m {{ python_package | replace('-', '_') }} >>(tee -a $output) 2> >(tee -a $output >&2){% endif %}
+        {% else %}python3.10 -m {{ python_package | replace('-', '_') }} > >(tee -a $output) 2> >(tee -a $output >&2){% endif %}
     ]]></command>
     <outputs>
         <data format="txt" name="output" label="Console output"></data>
@@ -26,6 +26,6 @@
         
         This is a Galaxy tool for {{ project_name }}.
         
-        For more information, see the repository: https://code.ornl.gov/ndip/tool-sources/generic/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}
+        For more information, see the repository: https://code.ornl.gov/ndip/tool-sources/{{ tool_category }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}
     ]]></help>
 </tool>
