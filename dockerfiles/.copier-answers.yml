@@ -8,4 +8,5 @@ project_name: Test Trame
 publish_docs: false
 publish_to_pypi: false
 python_package: test-trame
+tool_category: generic
 use_mantid: false

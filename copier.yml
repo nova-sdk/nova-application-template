@@ -16,6 +16,19 @@ python_package:
     help: What is your Python package name (use Python naming conventions, use dots to create submodules)?
     default: "{% include 'name_slug.j2' %}"
 
+tool_category:
+    type: str
+    help: Which category will your tool belong to?
+    choices:
+        Direct-Geometry Spectroscopy: direct-geometry-spectroscopy
+        Generic: generic
+        Imaging: imaging
+        Powder Diffraction: powder-diffraction
+        Reflectometry: reflectometry
+        Single Crystal Diffraction: single-crystal-diffraction
+        Small Angle Neutron Scattering: small-angle-neutron-scattering
+        Triple-Axis Spectroscopy: spectroscopy
+
 use_mantid:
     type: bool
     help: Do you want to install Mantid for your project?

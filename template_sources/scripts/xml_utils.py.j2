@@ -23,7 +23,10 @@ def check_docker_image_exists(image_url: str) -> bool:
     try:
         # Using subprocess to run the docker pull command to check image existence
         # The '--quiet' option minimizes output
-        result = subprocess.run(["docker", "pull", image_url], capture_output=True, text=True, check=False)
+        print(f"Attempting to verify container exists: {image_url}.")
+        result = subprocess.run(
+            ["docker", "manifest", "inspect", image_url], capture_output=True, text=True, check=False
+        )
 
         # If the command exited with 0, the image exists
         return result.returncode == 0
@@ -86,7 +89,7 @@ def push_tool_xml() -> None:
 
             # Replace placeholders with actual values
             container_registry = "savannah.ornl.gov"
-            container_path = "ndip/tool-sources/generic/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+            container_path = "ndip/tool-sources/{{ tool_category }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
 
             # Construct the full Docker image URL
             docker_image = f"{container_registry}/{container_path}:{version}"
