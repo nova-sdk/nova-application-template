@@ -1,0 +1,142 @@
+#!/bin/bash
+
+# Shell script alternative for initializing the Git repository (Minimal version)
+
+set -e # Exit immediately if a command exits with a non-zero status.
+
+# --- Configuration ---
+TOOL_CATEGORY="{{ tool_category }}"
+PROJECT_NAME_RAW="{{ project_name }}"
+# Slugify project name for URL (lowercase, replace space/underscore with dash)
+PROJECT_SLUG=$(echo "$PROJECT_NAME_RAW" | tr '[:upper:]' '[:lower:]' | sed 's/[ _]/-/g')
+REMOTE_URL="https://code.ornl.gov/ndip/tool-sources/${TOOL_CATEGORY}/${PROJECT_SLUG}"
+INITIAL_COMMIT_MSG="Initial commit from NOVA Application Template (Minimal)"
+
+# --- Functions ---
+confirm_action() {
+    while true; do
+        read -p "$1 (yes/no): " yn
+        case $yn in
+            [Yy]* ) return 0;;
+            [Nn]* ) return 1;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+}
+
+# --- Confirmation Step ---
+echo ""
+echo "--- Git Repository Setup Plan (Shell Script) ---"
+
+if [ ! -d ".git" ]; then
+    echo "- Initialize a new Git repository in the current directory."
+    NEEDS_INIT=true
+else
+    echo "- Use existing Git repository."
+    NEEDS_INIT=false
+fi
+
+# Check current branch name
+CURRENT_BRANCH=""
+if [ "$NEEDS_INIT" = false ]; then
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    if [ "$CURRENT_BRANCH" != "main" ] && [ -n "$CURRENT_BRANCH" ]; then
+        echo "- Rename current branch '$CURRENT_BRANCH' to 'main'."
+    elif [ -z "$CURRENT_BRANCH" ]; then # Detached HEAD or no branch yet
+         echo "- Set HEAD to 'main' branch."
+    fi
+else
+     echo "- Set default branch to 'main'."
+fi
+
+
+# Check remote
+REMOTE_EXISTS=$(git remote -v | grep '^origin' | grep '(push)$' | awk '{print $2}' || echo "")
+if [ -n "$REMOTE_EXISTS" ]; then
+     if [ "$REMOTE_EXISTS" != "$REMOTE_URL" ]; then
+        echo "- Update 'origin' remote URL to: $REMOTE_URL"
+     else
+        echo "- 'origin' remote URL is already set correctly."
+     fi
+else
+    echo "- Add 'origin' remote with URL: $REMOTE_URL"
+fi
+
+echo "- Stage all files for commit."
+
+# Check if commits exist
+COMMIT_EXISTS=$(git log -1 --pretty=format:"%h" 2>/dev/null || echo "")
+if [ -z "$COMMIT_EXISTS" ] || [ "$NEEDS_INIT" = true ]; then
+    echo "- Create initial commit with message: '$INITIAL_COMMIT_MSG'"
+    COMMIT_ACTION="create"
+else
+    echo "- Repository already has commits, skipping initial commit."
+    COMMIT_ACTION="skip"
+fi
+
+echo "-------------------------------------------------"
+
+if ! confirm_action "Proceed with the above Git actions?"; then
+    echo "Operation cancelled by user."
+    exit 0
+fi
+
+# --- Execute Actions ---
+echo ""
+echo "Executing Git actions..."
+
+# Initialize git repository if not already initialized
+if [ "$NEEDS_INIT" = true ]; then
+    echo "Initializing git repository..."
+    git init -b main
+fi
+
+# Ensure we're using 'main' as the default branch
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+if [ "$CURRENT_BRANCH" != "main" ]; then
+    if [ -z "$CURRENT_BRANCH" ]; then # Handles detached HEAD or initial state after init
+        echo "Checking out 'main' branch..."
+        # If main doesn't exist (e.g., empty repo init), checkout -b creates it
+        git checkout -b main || git checkout main
+    else
+        echo "Renaming branch '$CURRENT_BRANCH' to 'main'..."
+        git branch -m "$CURRENT_BRANCH" main
+    fi
+fi
+
+# Setup remote
+REMOTE_EXISTS=$(git remote -v | grep '^origin' | grep '(push)$' | awk '{print $2}' || echo "")
+if [ -z "$REMOTE_EXISTS" ]; then
+    echo "Adding remote: $REMOTE_URL"
+    git remote add origin "$REMOTE_URL"
+elif [ "$REMOTE_EXISTS" != "$REMOTE_URL" ]; then
+    echo "Setting remote URL: $REMOTE_URL"
+    git remote set-url origin "$REMOTE_URL"
+else
+     echo "Remote 'origin' URL already set correctly."
+fi
+
+
+# Add all files
+echo "Adding files to repository..."
+git add .
+
+# Make initial commit if needed
+if [ "$COMMIT_ACTION" = "create" ]; then
+     echo "Making initial commit..."
+     git commit -m "$INITIAL_COMMIT_MSG"
+else
+     echo "Skipping initial commit as repository already has commits."
+fi
+
+# --- Post-Action Instructions ---
+echo ""
+echo "Repository setup complete (changes NOT pushed)."
+echo "Please review the changes:"
+echo "  git status"
+echo "  git diff --staged"
+echo ""
+echo "If everything looks correct, push the changes manually:"
+echo "  git push --set-upstream origin main"
+
+exit 0

@@ -7,6 +7,17 @@ _exclude:
     - .git
     - name-slug
 
+application_type:
+    type: str
+    help: What kind of application are you creating?
+    choices:
+        - Nova Application
+        - NDIP Tool
+        - Command-line tool
+        - Library
+        - Tutorial
+        - Minimal
+
 project_name:
     type: str
     help: What is your project name?
@@ -15,6 +26,7 @@ python_package:
     type: str
     help: What is your Python package name (use Python naming conventions, use dots to create submodules)?
     default: "{% include 'name_slug.j2' %}"
+    when: "{{ application_type != 'Minimal' }}"
 
 tool_category:
     type: str
@@ -34,39 +46,47 @@ use_mantid:
     help: Do you want to install Mantid for your project?
     default: no
 
-gui:
-    type: bool
-    help: Are you developing a GUI application using MVVM pattern?
-    default: no
-
+# --- Nova Application Specific ---
+# Implicitly GUI if Nova Application is chosen.
 framework:
     type: str
-    help: Which library will you use?
+    help: Which GUI library will you use?
     choices:
         - Trame
         - PyQt5
         - PyQt6
     default: Trame
-    when: "{{ gui }}"
+    when: "{{ application_type == 'Nova Application' }}"
 
 multitabs:
     type: bool
     help: Do you want a template with multiple tabs?
     default: no
-    when: "{{ gui and framework=='Trame' }}"
+    when: "{{ application_type == 'Nova Application' and framework=='Trame' }}"
 
+# --- Library Specific ---
 publish_to_pypi:
     type: bool
     help: Publish to PyPI?
     default: no
+    when: "{{ application_type == 'Library' }}"
 
 publish_docs:
     type: bool
     help: Publish API documentation to readthedocs.io?
     default: no
+    when: "{{ application_type == 'Library' }}"
+
+# --- Minimal Specific ---
+# We'll add questions for the minimal version later if needed,
+# potentially reading from a separate config file.
+
+# --- Tutorial Specific ---
+# Tutorial might inherit settings or have its own specific ones.
+# We'll handle this when incorporating the tutorial template changes.
 
 _message_after_copy: |
-    Your project "{{ project_name }}" has been created successfully!
+    Your "{{ application_type }}" project "{{ project_name }}" has been created successfully!
 
     Next steps:
 
@@ -74,26 +94,93 @@ _message_after_copy: |
 
        $ cd {{ _copier_conf.dst_path }}
 
-    2. Read "DEVELOPMENT.md"!
-    
+    {% if application_type != 'Minimal' %}
+    2. Read "DEVELOPMENT.md" for development guidelines!
+
     3. Install project dependencies and setup pre-commit:
        $ poetry install
-       $ pre-commit install    
-    
-    4. Initialize Git repository and push to GitLab:
+       $ pre-commit install
+    {% else %}
+    2. Review the generated files, including `minimal_config.yaml`.
+       You may need to install dependencies like 'git', 'docker', 'bash', 'sed', 'grep', 'mktemp' manually if not already present.
+    {% endif %}
+
+    {% if application_type in ['Nova Application', 'NDIP Tool'] %}
+    4. Initialize the Git repository:
        $ poetry run init-repo
-       
-       This will set up the repository at:
-       https://code.ornl.gov/ndip/tool-sources/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}
-    
-    5. Push the tool XML file to the Galaxy tools repository:
-       $ poetry run push-xml
-       
-       This will add/update your tool XML in the Galaxy tools repository.
+
+       This script will show you the planned actions and ask for confirmation.
+       It will NOT push automatically. After running, review the changes and push manually:
+       $ git status
+       $ git diff --staged
+       $ git push --set-upstream origin main
+
+    5. Deploy the tool XML to the Galaxy tools repository:
+       $ poetry run deploy-tool
+
+       This script will also ask for confirmation before committing and pushing to the Galaxy tools repo.
+       Ensure your Docker image is built and pushed first (see DEVELOPMENT.md or Dockerfile).
 
     6. Test if the application runs:
        $ poetry run app
-        
-       If there are any problems with dependencies (like PyQt) you might need to install/update system libraries.
-    
-    7. Start coding :) Don't forget about writing documentation (see DEVELOPMENT.md)!
+       {% if application_type == 'Nova Application' %}
+       If there are any problems with GUI dependencies (like PyQt/Trame) you might need to install/update system libraries.
+       {% endif %}
+
+    7. Start coding! Remember to document your work (see DEVELOPMENT.md).
+
+    {% elif application_type == 'Command-line tool' %}
+    4. Initialize Git repository manually (if desired):
+       $ git init -b main
+       $ git add .
+       $ git commit -m "Initial commit"
+       # Add remote and push if needed
+
+    5. Test if the application runs:
+       $ poetry run app
+
+    6. Start coding! Remember to document your work (see DEVELOPMENT.md).
+
+    {% elif application_type == 'Library' %}
+    4. Initialize Git repository manually (if desired):
+       $ git init -b main
+       $ git add .
+       $ git commit -m "Initial commit"
+       # Add remote and push if needed
+
+    {% if publish_to_pypi %}
+    5. Configure PyPI publishing details in `pyproject.toml` and follow Poetry's publishing guide.
+    {% endif %}
+    {% if publish_docs %}
+    6. Configure Readthedocs integration (see `.readthedocs.yml` and `docs/conf.py`). Build docs locally with `poetry run sphinx-build docs docs/_build/html`.
+    {% endif %}
+
+    7. Start developing your library! Remember to write tests and documentation (see DEVELOPMENT.md).
+
+    {% elif application_type == 'Tutorial' %}
+    4. Follow the specific instructions provided in the generated tutorial documentation (e.g., TUTORIAL.md or README.md) for next steps.
+       This likely involves installing dependencies, running setup scripts, and testing the application.
+       $ poetry install
+       $ pre-commit install
+       # (Check tutorial docs for specific init-repo/deploy-tool usage if applicable)
+
+    {% elif application_type == 'Minimal' %}
+    3. Initialize the Git repository:
+       $ ./scripts/init-repo.sh
+
+       This script will show you the planned actions and ask for confirmation.
+       It will NOT push automatically. After running, review the changes and push manually:
+       $ git status
+       $ git diff --staged
+       $ git push --set-upstream origin main
+
+    4. Deploy the tool XML to the Galaxy tools repository:
+       $ ./scripts/deploy-tool.sh
+
+       This script will also ask for confirmation before committing and pushing to the Galaxy tools repo.
+       Ensure your Docker image (see `dockerfiles/Dockerfile`) is built and pushed first.
+       Update `minimal_config.yaml` if the version changes.
+
+    5. Start developing your application! Remember to update `minimal_config.yaml` as needed.
+
+    {% endif %}

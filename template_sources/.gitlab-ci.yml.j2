@@ -21,12 +21,24 @@ before_script:
   - source rse-bash-modules.sh
   - func_rse_docker_cleanup
   - docker login -u $NDIP_DOCKER_USER -p $NDIP_DOCKER_PASSWORD $NDIP_DOCKER_REPOSITORY
+{% if application_type != 'Minimal' -%}
   - export VERSION=$(cat pyproject.toml | grep "version =" | head -n 1 | awk '{ print $3 }' | tr -d '"')
+{% else -%}
+  # Extract version from minimal_config.yaml for Minimal type
+  - export VERSION=$(grep '^version:' minimal_config.yaml | sed -e 's/^version:[[:space:]]*//' -e 's/"//g' -e "s/'//g" | head -n 1)
+  - |
+    if [ -z "$VERSION" ]; then
+      echo "Error: Could not extract version from minimal_config.yaml" >&2
+      exit 1
+    fi
+    echo "Using Minimal version: $VERSION"
+{% endif -%}
 after_script:
   - curl https://code.ornl.gov/rse-deployment/rse-sharables/raw/master/rse-bash-modules.sh -O
   - source rse-bash-modules.sh
   - func_rse_docker_cleanup
 
+{% if application_type != 'Minimal' -%}
 lint-check:
   stage: lint
   script:
@@ -38,7 +50,9 @@ lint-check:
     - docker push ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
   tags:
     - rse-multi-builder
+{% endif -%} # End lint-check conditional
 
+{% if application_type != 'Minimal' -%}
 unit-tests:
   stage: test
   script:
@@ -58,32 +72,67 @@ unit-tests:
         path: reports/coverage.xml
   tags:
     - rse-multi-builder
+{% endif -%} # End unit-tests conditional
 
+{% if application_type != 'Minimal' -%}
 docs-test:
   stage: test
   script:
     - docker run -u `id -u`:`id -g` ${IMAGE_NAME}:src-${CI_COMMIT_SHA} bash build_docs.sh
   tags:
     - rse-multi-builder
+{% endif -%} # End docs-test conditional
 
 
-tag-release:
+# Tagging for Non-Minimal types (uses pyproject.toml version)
+{% if application_type != 'Minimal' -%}
+tag-release-poetry:
   stage: tag
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
     - when: never
   script:
+    - echo "Attempting to tag release $VERSION (from pyproject.toml)"
     - git config user.email "$GITLAB_USER_EMAIL"
     - git config user.name "$GITLAB_USER_NAME"
     - >
       if [ -z $(git ls-remote --tags origin "$VERSION") ]; then
-        git remote add gitlab https://oauth2:${NDIP_GROUP_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git
+        echo "Tag $VERSION does not exist remotely. Creating and pushing..."
+        git remote add gitlab https://oauth2:${NDIP_GROUP_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git || echo "Remote gitlab already exists or failed to add."
         git tag ${VERSION}
         git push gitlab --tags
+      else
+        echo "Tag $VERSION already exists remotely. Skipping tag creation."
       fi
   tags:
   - rse-multi-builder
+{% endif -%} # End tag-release-poetry conditional
+
+# Tagging for Minimal type (uses minimal_config.yaml version)
+{% if application_type == 'Minimal' -%}
+tag-release-minimal:
+  stage: tag
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
+    - when: never
+  script:
+    - echo "Attempting to tag release $VERSION (from minimal_config.yaml)"
+    - git config user.email "$GITLAB_USER_EMAIL"
+    - git config user.name "$GITLAB_USER_NAME"
+    - >
+      if [ -z $(git ls-remote --tags origin "$VERSION") ]; then
+        echo "Tag $VERSION does not exist remotely. Creating and pushing..."
+        git remote add gitlab https://oauth2:${NDIP_GROUP_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git || echo "Remote gitlab already exists or failed to add."
+        git tag ${VERSION}
+        git push gitlab --tags
+      else
+        echo "Tag $VERSION already exists remotely. Skipping tag creation."
+      fi
+  tags:
+  - rse-multi-builder
+{% endif -%} # End tag-release-minimal conditional
 
 
 build-image:
@@ -93,22 +142,35 @@ build-image:
   when: manual
   script:
     - IMAGE_TAG=${VERSION}
+    {% if application_type != 'Minimal' -%}
+    # Build using source image for non-minimal types
+    - echo "Building run image for $IMAGE_NAME:$IMAGE_TAG using source image ${IMAGE_NAME}:src-${CI_COMMIT_SHA}"
     - docker build -f dockerfiles/Dockerfile -t image --target run --build-arg SOURCE_IMAGE=${IMAGE_NAME}:src-${CI_COMMIT_SHA} .
     - docker tag image ${IMAGE_NAME}:bin-${CI_COMMIT_SHA}
     - docker push ${IMAGE_NAME}:bin-${CI_COMMIT_SHA}
+    {% else -%}
+    # Build directly for minimal type
+    - echo "Building image directly for $IMAGE_NAME:$IMAGE_TAG (Minimal)"
+    - docker build -f dockerfiles/Dockerfile -t image .
+    {% endif -%}
+    # Tagging and pushing logic (common)
     - docker tag image ${IMAGE_NAME}:latest
     - docker push ${IMAGE_NAME}:latest
     - >
       if ! docker pull ${IMAGE_NAME}:${IMAGE_TAG} || [ "$OVERWRITE_IMAGE" == "true" ]; then
+        echo "Pushing tag ${IMAGE_NAME}:${IMAGE_TAG}"
         docker tag image ${IMAGE_NAME}:${IMAGE_TAG}
         docker push ${IMAGE_NAME}:${IMAGE_TAG}
       else
-        echo tag ${IMAGE_TAG} already exists in ${NDIP_DOCKER_REPOSITORY}. Use OVERWRITE_IMAGE="true", delete image in the repository or change the tag
-        exit 1
+        echo "Tag ${IMAGE_TAG} already exists in ${NDIP_DOCKER_REPOSITORY}. Skipping push."
+        echo "To overwrite, set OVERWRITE_IMAGE=true in CI variables or delete the tag manually."
+        # Optionally exit 1 here if overwriting is strictly forbidden by default
+        # exit 1
       fi
   tags:
     - rse-multi-builder
 
+{% if application_type != 'Minimal' -%}
 package-build:
   stage: publish
   script:
@@ -126,8 +188,9 @@ package-build:
   when: manual
   tags:
     - rse-multi-builder
+{% endif -%} # End package-build conditional
 
-{%- if publish_docs %}
+{% if application_type != 'Minimal' and publish_docs -%}
 docs-publish:
   stage: publish
   rules:
@@ -143,4 +206,4 @@ docs-publish:
     - curl -X POST -d "branches=latest" -d "token=${READTHEDOCS_WEBHOOK_SECRET}" -d "default_branch=${CI_COMMIT_BRANCH}" ${READTHEDOCS_WEBHOOK_URL}
   tags:
     - rse-multi-builder
-{%- endif %}
+{% endif -%} # End docs-publish conditional

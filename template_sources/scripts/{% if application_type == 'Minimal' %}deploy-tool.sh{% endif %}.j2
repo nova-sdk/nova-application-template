@@ -1,0 +1,153 @@
+#!/bin/bash
+
+# Shell script alternative for deploying the tool XML (Minimal version)
+
+set -e # Exit immediately if a command exits with a non-zero status.
+
+# --- Configuration ---
+XML_SOURCE="xml/tool.xml"
+GALAXY_TOOLS_REPO="https://code.ornl.gov/ndip/galaxy-tools.git"
+GALAXY_BRANCH="prototype"
+TOOL_CATEGORY="{{ tool_category }}"
+PROJECT_NAME_RAW="{{ project_name }}"
+# Slugify project name for URL/filename (lowercase, replace space/underscore with dash)
+PROJECT_SLUG=$(echo "$PROJECT_NAME_RAW" | tr '[:upper:]' '[:lower:]' | sed 's/[ _]/-/g')
+XML_FILENAME="${PROJECT_SLUG}.xml"
+DEST_DIR_IN_REPO="tools/neutrons" # Relative path within galaxy-tools repo
+CONTAINER_REGISTRY="savannah.ornl.gov"
+CONTAINER_PATH="ndip/tool-sources/${TOOL_CATEGORY}/${PROJECT_SLUG}"
+MINIMAL_CONFIG_FILE="minimal_config.yaml" # Assuming this file exists in the project root
+
+# --- Functions ---
+confirm_action() {
+    while true; do
+        read -p "$1 (yes/no): " yn
+        case $yn in
+            [Yy]* ) return 0;;
+            [Nn]* ) return 1;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+}
+
+check_command() {
+    if ! command -v $1 &> /dev/null; then
+        echo "Error: Required command '$1' not found. Please install it." >&2
+        exit 1
+    fi
+}
+
+# --- Pre-checks ---
+check_command git
+check_command docker
+check_command sed
+check_command grep
+check_command mktemp
+
+if [ ! -f "$XML_SOURCE" ]; then
+    echo "Error: Tool XML file not found at $XML_SOURCE" >&2
+    exit 1
+fi
+
+if [ ! -f "$MINIMAL_CONFIG_FILE" ]; then
+    echo "Error: Minimal config file not found at $MINIMAL_CONFIG_FILE" >&2
+    echo "Cannot determine project version." >&2
+    exit 1
+fi
+
+# Get version from minimal_config.yaml (simple grep/sed approach)
+VERSION=$(grep '^version:' "$MINIMAL_CONFIG_FILE" | sed -e 's/^version:[[:space:]]*//' -e 's/"//g' -e "s/'//g" | head -n 1)
+
+if [ -z "$VERSION" ]; then
+    echo "Error: Could not extract version from $MINIMAL_CONFIG_FILE" >&2
+    exit 1
+fi
+echo "Using version: $VERSION"
+
+# Construct Docker image URL
+DOCKER_IMAGE="${CONTAINER_REGISTRY}/${CONTAINER_PATH}:${VERSION}"
+
+# --- Docker Image Check ---
+echo "Attempting to verify container exists: ${DOCKER_IMAGE}."
+if ! docker manifest inspect "$DOCKER_IMAGE" > /dev/null 2>&1; then
+    echo "Warning: Docker image ${DOCKER_IMAGE} could not be verified." >&2
+    echo "You should build and push the Docker image before deploying the XML." >&2
+    if ! confirm_action "Continue anyway?"; then
+        echo "Aborted by user." >&2
+        exit 1
+    fi
+    echo "Continuing without Docker image verification..." >&2
+else
+    echo "Docker image verified."
+fi
+
+
+# --- Prepare Temporary Directory ---
+TEMP_DIR=$(mktemp -d -t galaxy-tools-XXXXXX)
+# Setup cleanup trap
+trap 'echo "Cleaning up temporary directory..."; rm -rf "$TEMP_DIR"' EXIT
+
+# --- Clone and Prepare Repo ---
+echo "Cloning Galaxy tools repository: $GALAXY_TOOLS_REPO into $TEMP_DIR"
+git clone --depth 1 --branch "$GALAXY_BRANCH" "$GALAXY_TOOLS_REPO" "$TEMP_DIR"
+
+DEST_PATH_FULL="${TEMP_DIR}/${DEST_DIR_IN_REPO}"
+XML_DEST_FULL="${DEST_PATH_FULL}/${XML_FILENAME}"
+
+echo "Ensuring destination directory exists: $DEST_PATH_FULL"
+mkdir -p "$DEST_PATH_FULL"
+
+# --- Modify and Write XML ---
+echo "Processing XML file: $XML_SOURCE -> $XML_DEST_FULL"
+# Use sed for replacements. Using a temporary file avoids issues with in-place editing.
+sed \
+    -e "s|@TOOL_VERSION@|$VERSION|g" \
+    -e "s|@CONTAINER_REGISTRY@|$CONTAINER_REGISTRY|g" \
+    -e "s|@CONTAINER_PATH@|$CONTAINER_PATH|g" \
+    -e "s|@CONTAINER_TAG@|$VERSION|g" \
+    "$XML_SOURCE" > "$XML_DEST_FULL"
+
+# --- Check for Changes ---
+cd "$TEMP_DIR" # Change to repo directory for git commands
+if ! git status --porcelain | grep -qE "( M| A|\?\?) ${DEST_DIR_IN_REPO}/${XML_FILENAME}"; then
+    echo "No changes detected in the XML file within the Galaxy tools repo clone."
+    cd - > /dev/null # Go back to original directory
+    exit 0 # Exit successfully, nothing to do
+fi
+echo "Changes detected in XML file."
+cd - > /dev/null # Go back to original directory
+
+# --- Confirmation Step ---
+COMMIT_MSG="Add/update tool XML for ${PROJECT_NAME_RAW} (v${VERSION})"
+echo ""
+echo "--- Galaxy Tools XML Deploy Plan (Shell Script) ---"
+echo "- Repository: $GALAXY_TOOLS_REPO"
+echo "- Branch: $GALAXY_BRANCH"
+echo "- File to add/update: ${DEST_DIR_IN_REPO}/${XML_FILENAME}"
+echo "- Commit message: '$COMMIT_MSG'"
+echo "- Action: Add, commit, and push the changes."
+echo "-------------------------------------------------"
+
+if ! confirm_action "Proceed with deploying the XML to Galaxy tools?"; then
+    echo "Operation cancelled by user."
+    exit 0
+fi
+
+# --- Execute Actions ---
+echo ""
+echo "Executing Galaxy tools deploy..."
+cd "$TEMP_DIR" # Change to repo directory for git commands
+
+echo "Adding XML file..."
+git add "${DEST_DIR_IN_REPO}/${XML_FILENAME}"
+
+echo "Committing changes with message: '$COMMIT_MSG'"
+git commit -m "$COMMIT_MSG"
+
+echo "Pushing XML to Galaxy tools repository ($GALAXY_BRANCH branch)..."
+git push origin "$GALAXY_BRANCH"
+
+echo "Tool XML successfully deployed to Galaxy tools repository ($GALAXY_BRANCH branch)!"
+
+cd - > /dev/null # Go back to original directory
+exit 0 # Success
