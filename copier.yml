@@ -20,6 +20,7 @@ tool_category:
     type: str
     help: Which category will your tool belong to?
     choices:
+        Chemical Spectroscopy: chemical-spectroscopy
         Direct-Geometry Spectroscopy: direct-geometry-spectroscopy
         Generic: generic
         Imaging: imaging
