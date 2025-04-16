@@ -33,6 +33,7 @@ tool_category:
     help: Which category will your tool belong to?
     choices:
         Direct-Geometry Spectroscopy: direct-geometry-spectroscopy
+        Engineering Diffraction: engineering-diffraction
         Generic: generic
         Imaging: imaging
         Powder Diffraction: powder-diffraction

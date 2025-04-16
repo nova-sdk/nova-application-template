@@ -1,9 +1,9 @@
-<tool id="{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" {% if gui %}tool_type="interactive" {% endif %} name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
+<tool id="{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" {% if application_type == 'Nova Application' %}tool_type="interactive" {% endif %} name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
     <description>{{ project_name }} - A tool generated using the NOVA Application Template</description>
     <requirements>
         <container type="docker" shell="/bin/bash">@CONTAINER_REGISTRY@/@CONTAINER_PATH@:@CONTAINER_TAG@</container>
     </requirements>
-    {% if gui %}<entry_points>
+    {% if application_type == 'Nova Application' %}<entry_points>
         <entry_point name="app entry" label="app_entry" requires_domain="False" requires_path_in_url="True">
             <port>8081</port>
         </entry_point>
@@ -15,7 +15,7 @@
         <environment_variable name="EP_PATH" inject="entry_point_path_for_label">app_entry</environment_variable>
     </environment_variables>
      <command><![CDATA[
-        {% if gui and framework == 'Trame' %}supervisord > >(tee -a $output) 2> >(tee -a $output >&2)
+        {% if application_type == 'Nova Application' and framework == 'Trame' %}supervisord > >(tee -a $output) 2> >(tee -a $output >&2)
         {% else %}python3.10 -m {{ python_package | replace('-', '_') }} > >(tee -a $output) 2> >(tee -a $output >&2){% endif %}
     ]]></command>
     <outputs>

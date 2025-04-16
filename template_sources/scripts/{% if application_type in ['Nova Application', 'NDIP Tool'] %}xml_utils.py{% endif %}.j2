@@ -136,7 +136,7 @@ def push_tool_xml() -> None:
                 print("\n--- Galaxy Tools XML Push Plan ---")
                 print(f"- Repository: {galaxy_tools_repo}")
                 print("- Branch: prototype")
-                print(f"- File to add/update: {xml_dest.replace(temp_dir, 'galaxy-tools')}") # Show relative path
+                print(f"- File to add/update: {xml_dest.replace(temp_dir, 'galaxy-tools')}")  # Show relative path
                 commit_msg = f"Add/update tool XML for {{ project_name }} (v{version})"
                 print(f"- Commit message: '{commit_msg}'")
                 print("- Action: Add, commit, and push the changes.")

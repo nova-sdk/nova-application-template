@@ -38,14 +38,14 @@ def init_repository() -> None:
             if current_branch != "main":
                 print(f"- Rename current branch '{current_branch}' to 'main'.")
         except git.InvalidGitRepositoryError:
-             # Repo doesn't exist yet, will be created with main implicitly or explicitly
-             print("- Set default branch to 'main'.")
+            # Repo doesn't exist yet, will be created with main implicitly or explicitly
+            print("- Set default branch to 'main'.")
         except TypeError: # Handle detached HEAD state
-             print("- Set HEAD to 'main' branch.")
+            print("- Set HEAD to 'main' branch.")
 
 
         try:
-            git.Repo(".").remote("origin")
+            _ = git.Repo(".").remote("origin")
             print(f"- Update 'origin' remote URL to: {remote_url}")
         except (ValueError, git.InvalidGitRepositoryError):
             print(f"- Add 'origin' remote with URL: {remote_url}")
@@ -79,7 +79,7 @@ def init_repository() -> None:
 
         # Ensure we're using 'main' as the default branch
         if repo.active_branch.name != "main":
-             # Handle detached head state before renaming
+            # Handle detached head state before renaming
             if repo.head.is_detached:
                 print("HEAD is detached, checking out main...")
                 try:
@@ -90,7 +90,6 @@ def init_repository() -> None:
             else:
                 print(f"Renaming branch '{repo.active_branch.name}' to 'main'...")
                 repo.active_branch.rename("main")
-
 
         # Setup remote
         try:
@@ -110,10 +109,10 @@ def init_repository() -> None:
 
         # Make initial commit if needed
         if commit_action == "Create initial commit.":
-             print("Making initial commit...")
-             repo.git.commit("-m", "Initial commit from NOVA Application Template")
+            print("Making initial commit...")
+            repo.git.commit("-m", "Initial commit from NOVA Application Template")
         else:
-             print("Skipping initial commit as repository already has commits.")
+            print("Skipping initial commit as repository already has commits.")
 
         # --- Post-Action Instructions ---
         print("\nRepository setup complete (changes NOT pushed).")
@@ -121,7 +120,7 @@ def init_repository() -> None:
         print("  git status")
         print("  git diff --staged")
         print("\nIf everything looks correct, push the changes manually:")
-        print(f"  git push --set-upstream origin main")
+        print("  git push --set-upstream origin main")
 
     except git.GitCommandError as e:
         print(f"Git error: {e}", file=sys.stderr)
