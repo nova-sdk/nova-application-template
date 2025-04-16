@@ -43,7 +43,6 @@ def init_repository() -> None:
         except TypeError:  # Handle detached HEAD state
             print("- Set HEAD to 'main' branch.")
 
-
         try:
             git.Repo(".").remote("origin")
             print(f"- Update 'origin' remote URL to: {remote_url}")
