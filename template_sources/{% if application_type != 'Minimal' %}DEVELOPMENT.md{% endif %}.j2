@@ -45,7 +45,7 @@ poetry run app
 # build from source
 docker build -f dockerfiles/Dockerfile -t {{ python_package }} .
 # run a container
-{% if gui and framework == 'Trame' -%}
+{% if application_type == 'Nova Application' and framework == 'Trame' -%}
 docker run -p 8081:8081 -e EP_PATH=/app {{ python_package }}
 ```
 
@@ -109,7 +109,7 @@ and save them in GitLab (_Gitlab project->Settings->CI/CD->Variables->Add variab
 
 {%- endif %}
 
-{% if gui -%}
+{% if application_type == 'Nova Application' -%}
 
 ### Documentation for calvera.ornl.gov/docs
 
