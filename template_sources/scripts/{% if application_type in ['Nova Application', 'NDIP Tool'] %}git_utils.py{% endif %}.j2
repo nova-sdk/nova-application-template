@@ -40,19 +40,19 @@ def init_repository() -> None:
         except git.InvalidGitRepositoryError:
             # Repo doesn't exist yet, will be created with main implicitly or explicitly
             print("- Set default branch to 'main'.")
-        except TypeError: # Handle detached HEAD state
+        except TypeError:  # Handle detached HEAD state
             print("- Set HEAD to 'main' branch.")
 
 
         try:
-            _ = git.Repo(".").remote("origin")
+            git.Repo(".").remote("origin")
             print(f"- Update 'origin' remote URL to: {remote_url}")
         except (ValueError, git.InvalidGitRepositoryError):
             print(f"- Add 'origin' remote with URL: {remote_url}")
 
         print("- Stage all files for commit.")
         try:
-            git.Repo(".").head.commit
+            _ = git.Repo(".").head.commit
             print("- Repository already has commits, skipping initial commit.")
             commit_action = "No initial commit needed."
         except (ValueError, git.InvalidGitRepositoryError):
