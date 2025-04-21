@@ -8,8 +8,7 @@ license = "MIT"
 keywords = ["NDIP", "NOVA", "python"]
 
 packages = [
-  { include = "{{ python_package.split('.')[0] | replace('-', '_') }}", from = "src" }{% if application_type == 'Tutorial' %},
-  { include = "scripts" }{% endif %}
+  { include = "{{ python_package.split('.')[0] | replace('-', '_') }}", from = "src" }
 ]
 
 include = [
