@@ -20,14 +20,28 @@ RUN copier copy --data-file /template/dockerfiles/.tutorial-copier-answers.yml -
 
 
 
-WORKDIR /src_trame
+WORKDIR /src_cli
 RUN poetry install
 
-WORKDIR /src
+WORKDIR /src_library
+RUN poetry install
+
+WORKDIR /src_ndip_tool
+RUN poetry install
+
+WORKDIR /src_nova_application
+RUN poetry install
+
+WORKDIR /src_tutorial
+RUN poetry install
 
 RUN poetry install
 RUN poetry build --format=wheel
 
 RUN chmod og+rwX /poetry
-RUN chmod og+rwX /src
-RUN chmod og+rwX /src_trame
+RUN chmod og+rwX /src_cli
+RUN chmod og+rwX /src_library
+RUN chmod og+rwX /src_minimal
+RUN chmod og+rwX /src_ndip_tool
+RUN chmod og+rwX /src_nova_application
+RUN chmod og+rwX /src_tutorial
