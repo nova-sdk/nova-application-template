@@ -57,13 +57,13 @@ framework:
         - PyQt5
         - PyQt6
     default: Trame
-    when: "{{ application_type == 'Nova Application' }}"
+    when: "{{ application_type in ['Nova Application', 'Tutorial'] }}"
 
 multitabs:
     type: bool
     help: Do you want a template with multiple tabs?
     default: no
-    when: "{{ application_type == 'Nova Application' and framework=='Trame' }}"
+    when: "{{ application_type in ['Nova Application', 'Tutorial'] and framework=='Trame' }}"
 
 # --- Library Specific ---
 publish_to_pypi:
