@@ -1,4 +1,4 @@
-{% if application_type in ['Nova Application', 'Tutorial'] -%}
+{% if application_type not in ['Nova Application', 'Tutorial'] -%}
 import importlib.metadata
 
 from .main import main
