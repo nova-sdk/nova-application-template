@@ -11,8 +11,14 @@ RUN git config --global user.email "test"
 RUN git config --global user.name "test"
 
 COPY . /template
-RUN copier copy -d "application_type=NDIP Tool" -d "project_name=Test Project" -d "tool_category=generic" -l --vcs-ref=HEAD template src
-RUN copier copy --data-file /template/dockerfiles/trame-answers.yml --vcs-ref=HEAD template src_trame
+RUN copier copy --data-file /template/dockerfiles/.cli-copier-answers.yml --vcs-ref=HEAD template src_cli
+RUN copier copy --data-file /template/dockerfiles/.library-copier-answers.yml --vcs-ref=HEAD template src_library
+RUN copier copy --data-file /template/dockerfiles/.minimal-copier-answers.yml --vcs-ref=HEAD template src_minimal
+RUN copier copy --data-file /template/dockerfiles/.ndip-tool-copier-answers.yml --vcs-ref=HEAD template src_ndip_tool
+RUN copier copy --data-file /template/dockerfiles/.nova-application-copier-answers.yml --vcs-ref=HEAD template src_nova_application
+RUN copier copy --data-file /template/dockerfiles/.tutorial-copier-answers.yml --vcs-ref=HEAD template src_tutorial
+
+
 
 WORKDIR /src_trame
 RUN poetry install

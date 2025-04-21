@@ -1,7 +1,0 @@
-application_type: Nova Application
-framework: Trame
-multitabs: true
-project_name: Test Trame
-python_package: test-trame
-tool_category: generic
-use_mantid: false

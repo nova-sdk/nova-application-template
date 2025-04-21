@@ -23,14 +23,14 @@ test-cli-template:
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
-    - docker run -u `id -u`:`id -g` image poetry run ruff check
-    - docker run -u `id -u`:`id -g` image poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` image poetry run mypy .
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports image poetry run pytest .
+    - docker run -u `id -u`:`id -g` -w /src_cli image poetry run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_cli image poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_cli image poetry run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_cli image poetry run pytest .
   tags:
     - rse-multi-builder
 
-test-trame-template:
+test-library-template:
   stage: test
   hooks:
     pre_get_sources_script:
@@ -38,13 +38,72 @@ test-trame-template:
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
-    - docker run -u `id -u`:`id -g` -w /src_trame image poetry run ruff check
-    - docker run -u `id -u`:`id -g` -w /src_trame image poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` -w /src_trame image poetry run mypy .
-    - docker run -u `id -u`:`id -g` -w /src_trame image poetry run pytest .
+    - docker run -u `id -u`:`id -g` -w /src_library image poetry run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_library image poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_library image poetry run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_library image poetry run pytest .
   tags:
     - rse-multi-builder
 
+test-minimal-template:
+  stage: test
+  hooks:
+    pre_get_sources_script:
+    - 'test -d "${CI_PROJECT_DIR}" && sudo chown gitlab-runner -R "${CI_PROJECT_DIR}" ||:'
+  script:
+    - mkdir reports
+    - docker build -f dockerfiles/Dockerfile -t image .
+    - docker run -u `id -u`:`id -g` -w /src_minimal image poetry run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_minimal image poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_minimal image poetry run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_minimal image poetry run pytest .
+  tags:
+    - rse-multi-builder
+
+test-ndip-tool-template:
+  stage: test
+  hooks:
+    pre_get_sources_script:
+    - 'test -d "${CI_PROJECT_DIR}" && sudo chown gitlab-runner -R "${CI_PROJECT_DIR}" ||:'
+  script:
+    - mkdir reports
+    - docker build -f dockerfiles/Dockerfile -t image .
+    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image poetry run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image poetry run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image poetry run pytest .
+  tags:
+    - rse-multi-builder
+
+test-nova-application-template:
+  stage: test
+  hooks:
+    pre_get_sources_script:
+    - 'test -d "${CI_PROJECT_DIR}" && sudo chown gitlab-runner -R "${CI_PROJECT_DIR}" ||:'
+  script:
+    - mkdir reports
+    - docker build -f dockerfiles/Dockerfile -t image .
+    - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run pytest .
+  tags:
+    - rse-multi-builder
+
+test-tutorial-template:
+  stage: test
+  hooks:
+    pre_get_sources_script:
+    - 'test -d "${CI_PROJECT_DIR}" && sudo chown gitlab-runner -R "${CI_PROJECT_DIR}" ||:'
+  script:
+    - mkdir reports
+    - docker build -f dockerfiles/Dockerfile -t image .
+    - docker run -u `id -u`:`id -g` -w /src_tutorial image poetry run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_tutorial image poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_tutorial image poetry run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_tutorial image poetry run pytest .
+  tags:
+    - rse-multi-builder
 
 tag-release:
   stage: tag

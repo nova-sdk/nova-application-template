@@ -1,0 +1,6 @@
+# Please do not edit or delete this file. It is needed to be able to update project from template.
+application_type: Command-line tool
+project_name: CLI Tool
+python_package: cli-tool
+tool_category: generic
+use_mantid: false
