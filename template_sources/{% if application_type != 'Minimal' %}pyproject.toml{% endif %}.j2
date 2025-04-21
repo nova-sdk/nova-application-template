@@ -22,7 +22,7 @@ python = "^3.10"
 {% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] -%}
 gitpython = "^3.1.40"
 {% endif -%}
-{% if application_type == 'Nova Application' -%}
+{% if application_type in ['Nova Application', 'Tutorial'] -%}
 {% if framework=="Trame" -%}
 nova-trame = "*"
 {% else -%}
@@ -101,9 +101,9 @@ sphinxcontrib-napoleon ="*"
 tomli = "*"
 
 [tool.poetry.scripts]
-{% if application_type == 'Nova Application' -%}
+{% if application_type in ['Nova Application', 'Tutorial'] -%}
 app = "{{ python_package | replace('-', '_') }}.app:main"
-{% elif application_type in ['NDIP Tool', 'Command-line tool', 'Library', 'Tutorial'] -%}
+{% elif application_type in ['NDIP Tool', 'Command-line tool', 'Library'] -%}
 app = "{{ python_package | replace('-', '_') }}:main"
 {% endif -%}
 {% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] -%}
