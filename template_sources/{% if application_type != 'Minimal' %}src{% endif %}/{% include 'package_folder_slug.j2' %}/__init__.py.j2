@@ -1,4 +1,4 @@
-{% if not gui -%}
+{% if application_type not in ['Nova Application', 'Tutorial'] -%}
 import importlib.metadata
 
 from .main import main

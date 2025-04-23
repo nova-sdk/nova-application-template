@@ -37,11 +37,20 @@ def check_docker_image_exists(image_url: str) -> bool:
 
 
 def push_tool_xml() -> None:
-    """
-    Push the tool XML file to the Galaxy tools XML repository.
+    """Push the tool XML file to the Galaxy tools XML repository.
 
-    This clones the tools repository, adds/updates the tool XML file,
-    and pushes the changes back to the repository.
+    This function will:
+    - Check for the source XML file (`xml/tool.xml`).
+    - Determine the project version (from pyproject.toml or default to 'latest').
+    - Clone the Galaxy tools repository (`https://code.ornl.gov/ndip/galaxy-tools.git`) into a temporary directory.
+    - Check out the 'prototype' branch.
+    - Construct the destination path for the XML file.
+    - Replace placeholders in the XML content (version, container details).
+    - Check if the corresponding Docker image exists (with a prompt to continue if not found).
+    - Write the modified XML to the temporary clone.
+    - Check if there are changes to commit.
+    - **Ask for confirmation before committing and pushing.**
+    - If confirmed and changes exist, add, commit, and push the XML file to the 'prototype' branch.
     """
     try:
         # XML source file in the current project
@@ -120,22 +129,37 @@ def push_tool_xml() -> None:
             if repo.is_dirty(untracked_files=True) or xml_dest not in [item.a_path for item in repo.index.diff(None)]:
                 has_changes = True
 
-            if has_changes:
-                # Add the XML file
-                repo.git.add(xml_dest)
-
-                # Commit changes
-                commit_msg = "Add/update tool XML for {{ project_name }}"
-                repo.git.commit("-m", commit_msg)
-
-                # Push changes to prototype branch
-                print("Pushing XML to Galaxy tools repository (prototype branch)...")
-
-                # Push to prototype branch
-                repo.git.push("--set-upstream", "origin", "prototype")
-                print("Tool XML successfully pushed to Galaxy tools repository (prototype branch)!")
+            if not has_changes:
+                print("No changes detected in the XML file within the Galaxy tools repo clone.")
             else:
-                print("No changes to commit - XML file is already up to date.")
+                # --- Confirmation Step ---
+                print("\n--- Galaxy Tools XML Push Plan ---")
+                print(f"- Repository: {galaxy_tools_repo}")
+                print("- Branch: prototype")
+                print(f"- File to add/update: {xml_dest.replace(temp_dir, 'galaxy-tools')}")  # Show relative path
+                commit_msg = f"Add/update tool XML for {{ project_name }} (v{version})"
+                print(f"- Commit message: '{commit_msg}'")
+                print("- Action: Add, commit, and push the changes.")
+                print("-" * 30)
+
+                confirm = input("Proceed with pushing the XML to Galaxy tools? (yes/no): ").lower()
+                if confirm not in ["yes", "y"]:
+                    print("Operation cancelled by user.")
+                    # No sys.exit here, just finish the function without pushing
+                else:
+                    # --- Execute Actions ---
+                    print("\nExecuting Galaxy tools push...")
+                    # Add the XML file
+                    repo.git.add(xml_dest)
+
+                    # Commit changes
+                    print(f"Committing changes with message: '{commit_msg}'")
+                    repo.git.commit("-m", commit_msg)
+
+                    # Push changes to prototype branch
+                    print("Pushing XML to Galaxy tools repository (prototype branch)...")
+                    repo.git.push("--set-upstream", "origin", "prototype")
+                    print("Tool XML successfully pushed to Galaxy tools repository (prototype branch)!")
 
     except git.GitCommandError as e:
         print(f"Git error: {e}", file=sys.stderr)

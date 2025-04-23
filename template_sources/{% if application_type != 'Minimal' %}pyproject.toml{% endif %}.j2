@@ -18,8 +18,10 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
+{% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] -%}
 gitpython = "^3.1.40"
-{% if gui  -%}
+{% endif -%}
+{% if application_type in ['Nova Application', 'Tutorial'] -%}
 {% if framework=="Trame" -%}
 nova-trame = "*"
 {% else -%}
@@ -98,10 +100,12 @@ sphinxcontrib-napoleon ="*"
 tomli = "*"
 
 [tool.poetry.scripts]
-{% if gui  -%}
+{% if application_type in ['Nova Application', 'Tutorial'] -%}
 app = "{{ python_package | replace('-', '_') }}.app:main"
-{% else -%}
+{% elif application_type in ['NDIP Tool', 'Command-line tool', 'Library'] -%}
 app = "{{ python_package | replace('-', '_') }}:main"
 {% endif -%}
+{% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] -%}
 init-repo = "scripts.git_utils:init_repository"
 deploy-tool = "scripts.xml_utils:push_tool_xml"
+{% endif -%}

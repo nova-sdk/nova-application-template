@@ -1,0 +1,8 @@
+# Please do not edit or delete this file. It is needed to be able to update project from template.
+application_type: Tutorial
+framework: Trame
+multitabs: true
+project_name: Tutorial
+python_package: tutorial
+tool_category: generic
+use_mantid: false
