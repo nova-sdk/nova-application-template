@@ -1,4 +1,4 @@
-"""Utility for pushing tool XML to Galaxy tools repository."""
+"""Utility for pushing PROTOTYPE tool XML to Galaxy tools repository."""
 
 import os
 import sys
@@ -7,13 +7,15 @@ from pathlib import Path
 
 import git
 
-from .utils import check_docker_image_exists
+from .utils import check_docker_image_exists, check_uncommitted_changes, get_current_commit_sha
 
 
-def push_tool_xml() -> None:
-    """Push the tool XML file to the Galaxy tools XML repository.
+def push_tool_xml_prototype() -> None:
+    """Push the PROTOTYPE tool XML file to the Galaxy tools XML repository.
 
     This function will:
+    - Check for uncommitted changes in the current repository.
+    - Determine the current Git commit SHA for the prototype image tag.
     - Check for the source XML file (`xml/tool.xml`).
     - Determine the project version (from pyproject.toml or default to 'latest').
     - Clone the Galaxy tools repository (`https://code.ornl.gov/ndip/galaxy-tools.git`) into a temporary directory.
@@ -27,21 +29,23 @@ def push_tool_xml() -> None:
     - If confirmed and changes exist, add, commit, and push the XML file to the 'prototype' branch.
     """
     try:
-        # XML source file in the current project
+        # Check for uncommitted changes first
+        check_uncommitted_changes()
+
+        # Get current commit SHA for prototype image tag
+        prototype_image_tag = get_current_commit_sha()
+
         xml_source = Path("xml/tool.xml")
         if not xml_source.exists():
             print(f"Error: Tool XML file not found at {xml_source}", file=sys.stderr)
             sys.exit(1)
 
         # Get current project version for container tag
-        try:
-            with open("pyproject.toml", "r") as f:
-                for line in f:
-                    if line.startswith("version = "):
-                        version = line.split("=")[1].strip().strip("\"'")
-                        break
-        except Exception:
-            version = "latest"
+        with open("pyproject.toml", "r") as f:
+            for line in f:
+                if line.startswith("version = "):
+                    version = line.split("=")[1].strip().strip("\"'")
+                    break
 
         # Temporary directory for Galaxy tools repo
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -72,10 +76,10 @@ def push_tool_xml() -> None:
 
             # Replace placeholders with actual values
             container_registry = "savannah.ornl.gov"
-            container_path = "ndip/tool-sources/{{ tool_category }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+            container_path = "ndip/tool-sources/{{ tool_category }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}/prototypes"
 
             # Construct the full Docker image URL
-            docker_image = f"{container_registry}/{container_path}:{version}"
+            docker_image = f"{container_registry}/{container_path}:{prototype_image_tag}"
 
             # Check if the Docker image exists
             image_exists = check_docker_image_exists(docker_image)
@@ -92,7 +96,7 @@ def push_tool_xml() -> None:
             xml_content = xml_content.replace("@TOOL_VERSION@", version)
             xml_content = xml_content.replace("@CONTAINER_REGISTRY@", container_registry)
             xml_content = xml_content.replace("@CONTAINER_PATH@", container_path)
-            xml_content = xml_content.replace("@CONTAINER_TAG@", version)
+            xml_content = xml_content.replace("@CONTAINER_TAG@", prototype_image_tag)
 
             # Write the modified XML to the destination
             with open(xml_dest, "w") as dest_file:
@@ -144,4 +148,4 @@ def push_tool_xml() -> None:
 
 
 if __name__ == "__main__":
-    push_tool_xml()
+    push_tool_xml_prototype()

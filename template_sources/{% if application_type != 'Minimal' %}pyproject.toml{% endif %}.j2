@@ -108,4 +108,5 @@ app = "{{ python_package | replace('-', '_') }}:main"
 {% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] -%}
 init-repo = "scripts.git_utils:init_repository"
 deploy-tool = "scripts.xml_utils:push_tool_xml"
+deploy-prototype = "scripts.xml_utils_prototype:push_tool_xml_prototype"
 {% endif -%}
