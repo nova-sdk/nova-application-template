@@ -10,11 +10,13 @@ stages:
   - lint
   - test
   - tag
+  - build-prototype
   - publish
 
 variables:
   GIT_STRATEGY: clone
   IMAGE_NAME: ${NDIP_DOCKER_REPOSITORY}/${CI_PROJECT_PATH}
+  PROTOTYPE_IMAGE_DESTINATION: ${NDIP_DOCKER_REPOSITORY}/${CI_PROJECT_PATH}/prototypes
 
 before_script:
   - curl https://code.ornl.gov/rse-deployment/rse-sharables/raw/master/rse-bash-modules.sh -O
@@ -22,17 +24,18 @@ before_script:
   - func_rse_docker_cleanup
   - docker login -u $NDIP_DOCKER_USER -p $NDIP_DOCKER_PASSWORD $NDIP_DOCKER_REPOSITORY
   {% if application_type != 'Minimal' -%}
-    - export VERSION=$(cat pyproject.toml | grep "version =" | head -n 1 | awk '{ print $3 }' | tr -d '"')
+  - export VERSION=$(cat pyproject.toml | grep "version =" | head -n 1 | awk '{ print $3 }' | tr -d '"')
   {% else -%}
-    # Extract version from minimal_config.yaml for Minimal type
-    - export VERSION=$(grep '^version:' minimal_config.yaml | sed -e 's/^version:[[:space:]]*//' -e 's/"//g' -e "s/'//g" | head -n 1)
-    - |
-      if [ -z "$VERSION" ]; then
-        echo "Error: Could not extract version from minimal_config.yaml" >&2
-        exit 1
-      fi
-      echo "Using Minimal version: $VERSION"
-  {% endif -%}
+  # Extract version from minimal_config.yaml for Minimal type
+  - export VERSION=$(grep '^version:' minimal_config.yaml | sed -e 's/^version:[[:space:]]*//' -e 's/"//g' -e "s/'//g" | head -n 1)
+  - |
+    if [ -z "$VERSION" ]; then
+      echo "Error: Could not extract version from minimal_config.yaml" >&2
+      exit 1
+    fi
+    echo "Using Minimal version: $VERSION"
+{%- endif %}
+
 after_script:
   - curl https://code.ornl.gov/rse-deployment/rse-sharables/raw/master/rse-bash-modules.sh -O
   - source rse-bash-modules.sh
@@ -50,7 +53,7 @@ lint-check:
     - docker push ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
   tags:
     - rse-multi-builder
-{% endif -%} # End lint-check conditional
+{% endif %}
 
 {% if application_type != 'Minimal' -%}
 unit-tests:
@@ -72,7 +75,7 @@ unit-tests:
         path: reports/coverage.xml
   tags:
     - rse-multi-builder
-{% endif -%} # End unit-tests conditional
+{% endif %}
 
 {% if application_type != 'Minimal' -%}
 docs-test:
@@ -81,7 +84,7 @@ docs-test:
     - docker run -u `id -u`:`id -g` ${IMAGE_NAME}:src-${CI_COMMIT_SHA} bash build_docs.sh
   tags:
     - rse-multi-builder
-{% endif -%} # End docs-test conditional
+{% endif %}
 
 
 # Tagging for Non-Minimal types (uses pyproject.toml version)
@@ -107,10 +110,10 @@ tag-release-poetry:
       fi
   tags:
   - rse-multi-builder
-{% endif -%} # End tag-release-poetry conditional
+{% endif %}
 
-# Tagging for Minimal type (uses minimal_config.yaml version)
 {% if application_type == 'Minimal' -%}
+# Tagging for Minimal type (uses minimal_config.yaml version)
 tag-release-minimal:
   stage: tag
   rules:
@@ -132,10 +135,31 @@ tag-release-minimal:
       fi
   tags:
   - rse-multi-builder
-{% endif -%} # End tag-release-minimal conditional
+{% endif %}
 
 
-build-image:
+build-prototype-image:
+  stage: build-prototype
+  script:
+    - echo "Building prototype image for commit ${CI_COMMIT_SHA}"
+    {% if application_type != 'Minimal' -%}
+    # Build using source image for non-minimal types, which is at ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
+    - echo "Building prototype run image for ${PROTOTYPE_IMAGE_DESTINATION}:${CI_COMMIT_SHA} using source image ${IMAGE_NAME}:src-${CI_COMMIT_SHA}"
+    - docker build -f dockerfiles/Dockerfile -t prototype-image-built --target run --build-arg SOURCE_IMAGE=${IMAGE_NAME}:src-${CI_COMMIT_SHA} .
+    {% else -%}
+    # Build directly for minimal type
+    - echo "Building prototype image directly for ${PROTOTYPE_IMAGE_DESTINATION}:${CI_COMMIT_SHA} (Minimal)"
+    - docker build -f dockerfiles/Dockerfile -t prototype-image-built .
+    {% endif -%}
+    # Tagging and pushing logic for prototype
+    - docker tag prototype-image-built ${PROTOTYPE_IMAGE_DESTINATION}:${CI_COMMIT_SHA}
+    - docker push ${PROTOTYPE_IMAGE_DESTINATION}:${CI_COMMIT_SHA}
+    - docker tag prototype-image-built ${PROTOTYPE_IMAGE_DESTINATION}:latest-prototype
+    - docker push ${PROTOTYPE_IMAGE_DESTINATION}:latest-prototype
+  tags:
+    - rse-multi-builder
+
+build-prod-image:
   stage: publish
   variables:
     OVERWRITE_IMAGE: "false"
@@ -188,7 +212,7 @@ package-build:
   when: manual
   tags:
     - rse-multi-builder
-{% endif -%} # End package-build conditional
+{% endif %}
 
 {% if application_type != 'Minimal' and publish_docs -%}
 docs-publish:
@@ -206,4 +230,4 @@ docs-publish:
     - curl -X POST -d "branches=latest" -d "token=${READTHEDOCS_WEBHOOK_SECRET}" -d "default_branch=${CI_COMMIT_BRANCH}" ${READTHEDOCS_WEBHOOK_URL}
   tags:
     - rse-multi-builder
-{% endif -%} # End docs-publish conditional
+{% endif %}
