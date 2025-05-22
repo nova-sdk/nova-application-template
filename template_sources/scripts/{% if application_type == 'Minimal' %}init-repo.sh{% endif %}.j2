@@ -39,7 +39,7 @@ fi
 # Check current branch name
 CURRENT_BRANCH=""
 if [ "$NEEDS_INIT" = false ]; then
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
     if [ "$CURRENT_BRANCH" != "main" ] && [ -n "$CURRENT_BRANCH" ]; then
         echo "- Rename current branch '$CURRENT_BRANCH' to 'main'."
     elif [ -z "$CURRENT_BRANCH" ]; then # Detached HEAD or no branch yet
@@ -92,7 +92,7 @@ if [ "$NEEDS_INIT" = true ]; then
 fi
 
 # Ensure we're using 'main' as the default branch
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
 if [ "$CURRENT_BRANCH" != "main" ]; then
     if [ -z "$CURRENT_BRANCH" ]; then # Handles detached HEAD or initial state after init
         echo "Checking out 'main' branch..."

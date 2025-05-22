@@ -1,0 +1,189 @@
+#!/bin/bash
+
+# Shell script for deploying the PROTOTYPE tool XML (Minimal version)
+# This script will use the current Git commit SHA for the prototype image tag.
+
+set -e # Exit immediately if a command exits with a non-zero status.
+
+# --- Configuration ---
+XML_SOURCE="xml/tool.xml"
+GALAXY_TOOLS_REPO="https://code.ornl.gov/ndip/galaxy-tools.git"
+GALAXY_BRANCH="prototype"
+TOOL_CATEGORY="{{ tool_category }}"
+PROJECT_NAME_RAW="{{ project_name }}"
+# Slugify project name for URL/filename (lowercase, replace space/underscore with dash)
+PROJECT_SLUG=$(echo "$PROJECT_NAME_RAW" | tr '[:upper:]' '[:lower:]' | sed 's/[ _]/-/g')
+XML_FILENAME="${PROJECT_SLUG}.xml"
+DEST_DIR_IN_REPO="tools/neutrons" # Relative path within galaxy-tools repo
+
+CONTAINER_REGISTRY="savannah.ornl.gov"
+CONTAINER_PATH="ndip/tool-sources/${TOOL_CATEGORY}/${PROJECT_SLUG}/prototypes"
+CURRENT_COMMIT_SHA="" # Will be set after git check
+
+MINIMAL_CONFIG_FILE="minimal_config.yaml" # Assuming this file exists in the project root
+
+# --- Functions ---
+confirm_action() {
+    while true; do
+        read -p "$1 (yes/no): " yn
+        case $yn in
+            [Yy]* ) return 0;;
+            [Nn]* ) return 1;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+}
+
+check_command() {
+    if ! command -v $1 &> /dev/null; then
+        echo "Error: Required command '$1' not found. Please install it." >&2
+        exit 1
+    fi
+}
+
+# --- Pre-checks ---
+check_command git
+check_command docker
+check_command sed
+check_command grep
+check_command mktemp
+
+# Check if inside a git repository and get commit SHA
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Error: Not inside a Git repository. Cannot determine commit SHA for prototype image tag." >&2
+    exit 1
+fi
+CURRENT_COMMIT_SHA=$(git rev-parse HEAD)
+if [ -z "$CURRENT_COMMIT_SHA" ]; then
+    echo "Error: Could not determine current Git commit SHA." >&2
+    exit 1
+fi
+echo "Using current Git commit SHA for prototype image tag: $CURRENT_COMMIT_SHA"
+PROTOTYPE_IMAGE_TAG="$CURRENT_COMMIT_SHA"
+
+
+if [ ! -f "$XML_SOURCE" ]; then
+    echo "Error: Tool XML file not found at $XML_SOURCE" >&2
+    exit 1
+fi
+
+if [ ! -f "$MINIMAL_CONFIG_FILE" ]; then
+    echo "Error: Minimal config file not found at $MINIMAL_CONFIG_FILE" >&2
+    echo "Cannot determine project version." >&2
+    exit 1
+fi
+
+# Get version from minimal_config.yaml (simple grep/sed approach)
+VERSION=$(grep '^version:' "$MINIMAL_CONFIG_FILE" | sed -e 's/^version:[[:space:]]*//' -e 's/"//g' -e "s/'//g" | head -n 1)
+
+if [ -z "$VERSION" ]; then
+    echo "Error: Could not extract version from $MINIMAL_CONFIG_FILE" >&2
+    exit 1
+fi
+echo "Using version: $VERSION"
+
+# --- Check for Uncommitted Changes ---
+echo "Checking for uncommitted changes in the current repository..."
+if [ -n "$(git status --porcelain)" ]; then
+    echo "Warning: There are uncommitted changes in your working directory."
+    echo "These changes will NOT be present in the deployed prototype image (tagged with $PROTOTYPE_IMAGE_TAG) if they haven't been committed, pushed, and built by the CI."
+    if ! confirm_action "Do you wish to continue with the deployment?"; then
+        echo "Aborted by user due to uncommitted changes." >&2
+        exit 1
+    fi
+    echo "Continuing deployment despite uncommitted changes..."
+else
+    echo "No uncommitted changes detected."
+fi
+
+# Construct Docker image URL for Prototype
+DOCKER_IMAGE="${CONTAINER_REGISTRY}/${CONTAINER_PATH}:${PROTOTYPE_IMAGE_TAG}"
+
+# --- Docker Image Check ---
+echo "Attempting to verify PROTOTYPE container exists: ${DOCKER_IMAGE}."
+if ! docker manifest inspect "$DOCKER_IMAGE" > /dev/null 2>&1; then
+    echo "Warning: Prototype Docker image ${DOCKER_IMAGE} could not be verified." >&2
+    echo "Ensure the prototype image has been built and pushed from the 'build-prototype-image' CI stage with the tag '${PROTOTYPE_IMAGE_TAG}'." >&2
+    if ! confirm_action "Continue with XML deployment anyway?"; then
+        echo "Aborted by user." >&2
+        exit 1
+    fi
+    echo "Continuing XML deployment without prototype Docker image verification..." >&2
+else
+    echo "Prototype Docker image verified: ${DOCKER_IMAGE}"
+fi
+
+
+# --- Prepare Temporary Directory ---
+TEMP_DIR=$(mktemp -d -t galaxy-tools-XXXXXX)
+# Setup cleanup trap
+trap 'echo "Cleaning up temporary directory..."; rm -rf "$TEMP_DIR"' EXIT
+
+# --- Clone and Prepare Repo ---
+echo "Cloning Galaxy tools repository: $GALAXY_TOOLS_REPO into $TEMP_DIR (branch: $GALAXY_BRANCH)"
+git clone --depth 1 --branch "$GALAXY_BRANCH" "$GALAXY_TOOLS_REPO" "$TEMP_DIR"
+
+DEST_PATH_FULL="${TEMP_DIR}/${DEST_DIR_IN_REPO}"
+XML_DEST_FULL="${DEST_PATH_FULL}/${XML_FILENAME}"
+
+echo "Ensuring destination directory exists: $DEST_PATH_FULL"
+mkdir -p "$DEST_PATH_FULL"
+
+# --- Modify and Write XML ---
+echo "Processing XML file: $XML_SOURCE -> $XML_DEST_FULL"
+# Use sed for replacements.
+# @TOOL_VERSION@ uses the version from minimal_config.yaml
+# @CONTAINER_PATH@ uses the prototype specific base path
+# @CONTAINER_TAG@ uses the current commit SHA
+sed \
+    -e "s|@TOOL_VERSION@|$VERSION|g" \
+    -e "s|@CONTAINER_REGISTRY@|$CONTAINER_REGISTRY|g" \
+    -e "s|@CONTAINER_PATH@|$CONTAINER_PATH|g" \
+    -e "s|@CONTAINER_TAG@|$PROTOTYPE_IMAGE_TAG|g" \
+    "$XML_SOURCE" > "$XML_DEST_FULL"
+
+# --- Check for Changes ---
+cd "$TEMP_DIR" # Change to repo directory for git commands
+if ! git status --porcelain | grep -qE "( M| A|\?\?) ${DEST_DIR_IN_REPO}/${XML_FILENAME}"; then
+    echo "No changes detected in the XML file within the Galaxy tools repo clone."
+    cd - > /dev/null # Go back to original directory
+    exit 0 # Exit successfully, nothing to do
+fi
+echo "Changes detected in XML file."
+cd - > /dev/null # Go back to original directory
+
+# --- Confirmation Step ---
+COMMIT_MSG="Add/update PROTOTYPE tool XML for ${PROJECT_NAME_RAW} (image ${CONTAINER_PATH}:${PROTOTYPE_IMAGE_TAG})"
+echo ""
+echo "--- Galaxy Tools PROTOTYPE XML Deploy Plan (Shell Script) ---"
+echo "- Repository: $GALAXY_TOOLS_REPO"
+echo "- Branch: $GALAXY_BRANCH"
+echo "- File to add/update: ${DEST_DIR_IN_REPO}/${XML_FILENAME}"
+echo "- Target Docker Image: ${DOCKER_IMAGE}"
+echo "- Commit message: '$COMMIT_MSG'"
+echo "- Action: Add, commit, and push the changes."
+echo "-------------------------------------------------"
+
+if ! confirm_action "Proceed with deploying the PROTOTYPE XML to Galaxy tools?"; then
+    echo "Operation cancelled by user."
+    exit 0
+fi
+
+# --- Execute Actions ---
+echo ""
+echo "Executing Galaxy tools PROTOTYPE deploy..."
+cd "$TEMP_DIR" # Change to repo directory for git commands
+
+echo "Adding XML file..."
+git add "${DEST_DIR_IN_REPO}/${XML_FILENAME}"
+
+echo "Committing changes with message: '$COMMIT_MSG'"
+git commit -m "$COMMIT_MSG"
+
+echo "Pushing PROTOTYPE XML to Galaxy tools repository ($GALAXY_BRANCH branch)..."
+git push origin "$GALAXY_BRANCH"
+
+echo "Tool PROTOTYPE XML successfully deployed to Galaxy tools repository ($GALAXY_BRANCH branch)!"
+
+cd - > /dev/null # Go back to original directory
+exit 0 # Success
