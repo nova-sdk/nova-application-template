@@ -73,7 +73,7 @@ def check_uncommitted_changes() -> None:
         if repo.is_dirty(untracked_files=True):
             print("\nWarning: There are uncommitted changes in your working directory.", file=sys.stderr)
             print("Changes will not be present in the deployed prototype image unless committed.", file=sys.stderr)
-            print("The prototype image will be tagged with the LATEST COMMITTED SHA.", file=sys.stderr)
+            print("The image will be tagged with the LATEST COMMITTED SHA or version.", file=sys.stderr)
 
             user_input = input("Do you wish to continue with the deployment? (yes/no): ").strip().lower()
             if user_input not in ["y", "yes"]:
