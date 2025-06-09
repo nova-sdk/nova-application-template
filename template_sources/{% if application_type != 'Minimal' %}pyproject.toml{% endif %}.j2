@@ -25,6 +25,7 @@ python-gitlab = "^5.6.0"
 {% if application_type in ['Nova Application', 'Tutorial'] -%}
 {% if framework=="Trame" -%}
 nova-trame = "*"
+trame-datagrid = ">=0.2.2"
 {% else -%}
 nova-mvvm = {extras = ["{{ framework | lower }}"], version = "*"}
 {% endif -%}
