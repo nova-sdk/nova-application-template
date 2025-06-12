@@ -117,19 +117,26 @@ _message_after_copy: |
        $ git diff --staged
        $ git push --set-upstream origin main
 
-    5. Deploy the tool XML to the Galaxy tools repository:
-       $ poetry run deploy-tool
-
-       This script will also ask for confirmation before committing and pushing to the Galaxy tools repo.
-       Ensure your Docker image is built and pushed first (see DEVELOPMENT.md or Dockerfile).
-
-    6. Test if the application runs:
+    5. Test if the application runs:
        $ poetry run app
        {% if application_type == 'Nova Application' %}
        If there are any problems with GUI dependencies (like PyQt/Trame) you might need to install/update system libraries.
        {% endif %}
 
-    7. Start coding! Remember to document your work (see DEVELOPMENT.md).
+    6. Deploy the tool XML to the Galaxy tools repository on the prototype branch:
+       $ poetry run deploy-prototype
+
+       This script will also ask for confirmation before committing and pushing to the Galaxy tools repo.
+       Ensure your Docker image is built and pushed first (see DEVELOPMENT.md or Dockerfile).
+
+    7. Start coding! Remember to document your work (see DEVELOPMENT.md). Continue to update the version in pyproject.toml and run deploy-prototype as needed.
+
+    8. When you're ready to make your tool available to users, deloy the tool XML to the Galaxy tools repository on the dev branch:
+       $ poetry run deploy-production
+
+       This script will first create a new branch with your XML, then create a merge request from that branch to the dev branch.
+       This will start the process of making your tool available to users on calvera. You should also review the MR and assign a reviewer.
+
 
     {% elif application_type == 'Command-line tool' %}
     4. Initialize Git repository manually (if desired):
