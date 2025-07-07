@@ -31,4 +31,4 @@ command=/bin/bash /run_nginx.sh
 # This shuts down supervisord in response to fatal events to any of its child processes.
 [eventlistener:quit_on_fatal]
 command=/bin/bash -c 'echo "READY"; while read -r line; do echo "$line"; supervisorctl shutdown; done'
-events=PROCESS_STATE_FATAL
+events=PROCESS_STATE_EXITED,PROCESS_STATE_FATAL
