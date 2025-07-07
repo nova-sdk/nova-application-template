@@ -9,6 +9,7 @@ logfile_backups=10           ; # of main logfile backups; 0 means none, default 
 loglevel=info                ; log level; default info; others: debug,warn,trace
 pidfile=/tmp/supervisord.pid ; supervisord pidfile; default supervisord.pid
 nodaemon=true                ; start in foreground if true; default false
+autorestart=false
 
 [supervisorctl]
 serverurl=unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
