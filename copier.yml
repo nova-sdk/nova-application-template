@@ -35,6 +35,7 @@ tool_category:
         Chemical Spectroscopy: chemical-spectroscopy
         Direct-Geometry Spectroscopy: direct-geometry-spectroscopy
         Engineering Diffraction: engineering-diffraction
+        Fusion: fusion
         Generic: generic
         Imaging: imaging
         Powder Diffraction: powder-diffraction
