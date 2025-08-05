@@ -4,8 +4,11 @@ ENV POETRY_CACHE_DIR=/poetry/.cache
 ENV POETRY_CONFIG_DIR=/poetry/.config
 ENV POETRY_HOME=/poetry
 
-RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y curl git
 RUN pip install poetry copier
+
+RUN curl -fsSL https://pixi.sh/install.sh | sh
+ENV PATH="/root/.pixi/bin:${PATH}"
 
 RUN git config --global user.email "test"
 RUN git config --global user.name "test"
@@ -16,8 +19,8 @@ RUN copier copy --data-file /template/dockerfiles/.library-copier-answers.yml --
 RUN copier copy --data-file /template/dockerfiles/.minimal-copier-answers.yml --vcs-ref=HEAD template src_minimal
 RUN copier copy --data-file /template/dockerfiles/.ndip-tool-copier-answers.yml --vcs-ref=HEAD template src_ndip_tool
 RUN copier copy --data-file /template/dockerfiles/.nova-application-copier-answers.yml --vcs-ref=HEAD template src_nova_application
+RUN copier copy --data-file /template/dockerfiles/.nova-application-mantid-copier-answers.yml --vcs-ref=HEAD template src_nova_application_mantid
 RUN copier copy --data-file /template/dockerfiles/.tutorial-copier-answers.yml --vcs-ref=HEAD template src_tutorial
-
 
 
 WORKDIR /src_cli
@@ -32,6 +35,10 @@ RUN poetry install
 WORKDIR /src_nova_application
 RUN poetry install
 
+WORKDIR /src_nova_application_mantid
+RUN pixi install
+RUN pixi run poetry install
+
 WORKDIR /src_tutorial
 RUN poetry install
 
@@ -44,4 +51,5 @@ RUN chmod og+rwX /src_library
 RUN chmod og+rwX /src_minimal
 RUN chmod og+rwX /src_ndip_tool
 RUN chmod og+rwX /src_nova_application
+RUN chmod og+rwX /src_nova_application_mantid
 RUN chmod og+rwX /src_tutorial

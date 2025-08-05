@@ -1,5 +1,5 @@
 if [[ -z "$CONFIG" ]]; then
-    python3.10 -m {% include 'package_folder_slug.j2' %}.app --galaxy-history-id $HISTORY_ID --host 0.0.0.0 --server timeout=0
+    python{%- if not use_mantid -%}3.10{%- endif %} -m {% include 'package_folder_slug.j2' %}.app --galaxy-history-id $HISTORY_ID --host 0.0.0.0 --server timeout=0
 else
-    python3.10 -m {% include 'package_folder_slug.j2' %}.app --config $CONFIG --galaxy-history-id $HISTORY_ID --host 0.0.0.0 --server timeout=0
+    python{%- if not use_mantid -%}3.10{%- endif %} -m {% include 'package_folder_slug.j2' %}.app --config $CONFIG --galaxy-history-id $HISTORY_ID --host 0.0.0.0 --server timeout=0
 fi
