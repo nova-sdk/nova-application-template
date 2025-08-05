@@ -74,6 +74,21 @@ test-nova-application-template:
     - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run pytest .
   tags:
     - rse-multi-builder
+    
+test-nova-application-mantid-template:
+  stage: test
+  hooks:
+    pre_get_sources_script:
+    - 'test -d "${CI_PROJECT_DIR}" && sudo chown gitlab-runner -R "${CI_PROJECT_DIR}" ||:'
+  script:
+    - mkdir reports
+    - docker build -f dockerfiles/Dockerfile -t image .
+    - docker run -u `id -u`:`id -g` -w /src_nova_application_mantid image pixi run poetry run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_nova_application_mantid image pixi run poetry run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_nova_application_mantid image pixi run poetry run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_nova_application_mantid image pixi run poetry run pytest .
+  tags:
+    - rse-multi-builder
 
 test-tutorial-template:
   stage: test

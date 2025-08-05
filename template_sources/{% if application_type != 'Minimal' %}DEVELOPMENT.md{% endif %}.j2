@@ -22,23 +22,29 @@ to create an issue [in this repo](https://code.ornl.gov/ndip/project-templates/p
 
 ## Installation
 {% if use_mantid %}
-Start by installing an x64-compatible version of [conda](https://docs.anaconda.com/). Once done, run the following to install Mantid and poetry:
+Start by installing [Pixi](https://pixi.sh/latest/). Once done, run the following to install Mantid and Poetry:
 
 ```commandline
-conda create -n {{ python_package }} -c conda-forge -c mantid python=3.10 mantid poetry
-conda activate {{ python_package }}
+pixi install
+pixi run poetry install
 {% else %}
 ```commandline
 pip install poetry
-{% endif %}
 poetry install
+{% endif %}
 ```
 
 ## Running
 ### From source
+{% if use_mantid %}
+```bash
+pixi run poetry run app
+```
+{%- else -%}
 ```bash
 poetry run app
 ```
+{% endif %}
 
 ### Using Docker
 ```bash

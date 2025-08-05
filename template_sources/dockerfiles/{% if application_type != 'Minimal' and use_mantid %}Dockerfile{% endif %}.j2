@@ -1,0 +1,74 @@
+ARG SOURCE_IMAGE=source
+
+FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/kitware/trame:py3.10-2025-05 AS source
+
+RUN apt update && apt install -y curl
+
+# make sure image can run as non-root user
+ENV POETRY_CACHE_DIR=/poetry/.cache
+ENV POETRY_CONFIG_DIR=/poetry/.config
+ENV POETRY_HOME=/poetry
+
+COPY . /src
+WORKDIR /src
+
+RUN curl -fsSL https://pixi.sh/install.sh | sh
+ENV PATH="/root/.pixi/bin:${PATH}"
+RUN pixi install
+SHELL [ "pixi", "run" ]
+ENTRYPOINT [ "pixi", "run" ]
+
+RUN poetry install
+
+RUN mkdir -p /.cache /.config /.mantid /.mozilla
+RUN chmod og+rwX -R /.cache /.config /.mantid /.mozilla /poetry /src
+
+
+# This is a workaround that allows the COPY --from location to be defined as a build argument.
+# With this, we can reference the built source image from Harbor in our pipelines, while still
+# defaulting to using the previous stage for local builds.
+FROM $SOURCE_IMAGE AS source_image
+
+
+FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/kitware/trame:py3.10-2025-05 AS run
+
+{% if application_type in ['Nova Application', 'Tutorial'] and framework == 'Trame' -%}
+RUN mkdir -p /src
+COPY --from=source_image /src/pyproject.toml /src/
+COPY --from=source_image /src/*.lock /src/
+COPY --from=source_image /src/README.md /src/
+COPY --from=source_image /src/src /src/src
+COPY --from=source_image /src/scripts /src/scripts
+WORKDIR /src
+
+RUN apt update && apt install -y curl gettext nginx wget
+RUN chmod og+rwX -R /var/lib/nginx
+RUN chmod og+rwX -R /var/log/nginx
+RUN chmod og+rwX -R /etc/nginx
+
+COPY dockerfiles/nginx.conf.template /etc/nginx/nginx.conf.template
+COPY dockerfiles/supervisord.conf /etc/supervisord.conf
+COPY dockerfiles/mantid.local.properties /etc/mantid.local.properties
+COPY scripts/run_nginx.sh /
+COPY scripts/run_trame.sh /
+
+RUN curl -fsSL https://pixi.sh/install.sh | sh
+ENV PATH="/root/.pixi/bin:${PATH}"
+RUN pixi install
+SHELL [ "pixi", "run" ]
+ENTRYPOINT [ "pixi", "run" ]
+
+RUN poetry install --compile --without dev
+RUN poetry run pip install supervisor
+
+RUN python -m trame.tools.www --client-type vue3 --output /app/www-content
+
+# Get the static JS from nova-trame and add it to our client build
+RUN mkdir -p /app/www-content/assets/js
+RUN export NOVA_TRAME_LOCATION="$(pixi run poetry run pip show nova-trame | grep 'Location' | awk '{ print $2 }')/nova/trame" && cp $NOVA_TRAME_LOCATION/view/theme/assets/js/*.js /app/www-content/assets/js/
+
+RUN mkdir -p /.mantid
+RUN chmod og+rwX -R /.mantid
+
+CMD [ "supervisord" ]
+{%- endif -%}

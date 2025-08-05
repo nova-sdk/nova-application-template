@@ -7,12 +7,14 @@ ENV POETRY_CACHE_DIR=/poetry/.cache
 ENV POETRY_CONFIG_DIR=/poetry/.config
 ENV POETRY_HOME=/poetry
 
-RUN pip install poetry
+RUN pip install poetry poetry-plugin-export
+
 COPY . /src
 WORKDIR /src
 
 RUN poetry install
 RUN poetry build --format=wheel
+RUN poetry export -o /src/dist/requirements.txt
 
 RUN chmod og+rwX -R /poetry
 RUN chmod og+rwX -R /src
@@ -21,27 +23,18 @@ RUN chmod og+rwX -R /src
 # This is a workaround that allows the COPY --from location to be defined as a build argument.
 # With this, we can reference the built source image from Harbor in our pipelines, while still
 # defaulting to using the previous stage for local builds.
-FROM $SOURCE_IMAGE as source_image
+FROM $SOURCE_IMAGE AS source_image
 
 
-{% if use_mantid -%}
-FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/kitware/trame:py3.10-conda-2024-11 AS run
-
-RUN conda install -n base conda-libmamba-solver
-RUN conda config --set solver libmamba
-RUN conda create --yes -n {{ python_package }} -c conda-forge -c mantid python=3.10 mantid=6.12.0
-SHELL ["conda", "run", "-n", "{{ python_package }}", "/bin/bash", "-c"]
-ENTRYPOINT [ "conda", "run", "--no-capture-output", "-n", "{{ python_package }}" ]
-{%- else %}
 FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/ubuntu:22.04 AS run
 
 RUN DEBIAN_FRONTEND="noninteractive" apt-get update && apt-get -y install tzdata
 RUN apt-get install -y python3.10 curl
 RUN curl -ksS https://bootstrap.pypa.io/get-pip.py | python3.10
-{%- endif %}
 
 COPY --from=source_image /src/dist /dist
-RUN pip install /dist/*.whl
+RUN pip install -r /dist/requirements.txt
+RUN pip install --no-deps /dist/*.whl
 
 {% if application_type in ['Nova Application', 'Tutorial'] and framework == 'Trame' -%}
 RUN pip install supervisor
@@ -53,9 +46,6 @@ RUN chmod og+rwX -R /etc/nginx
 
 COPY dockerfiles/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY dockerfiles/supervisord.conf /etc/supervisord.conf
-{% if use_mantid -%}
-COPY dockerfiles/mantid.local.properties /etc/mantid.local.properties
-{% endif -%}
 COPY scripts/run_nginx.sh /
 COPY scripts/run_trame.sh /
 
@@ -64,9 +54,5 @@ RUN python3.10 -m trame.tools.www --client-type vue3 --output /app/www-content
 # Get the static JS from nova-trame and add it to our client build
 RUN mkdir -p /app/www-content/assets/js
 RUN export NOVA_TRAME_LOCATION=$(pip show nova-trame | grep "Location" | awk '{ print $2 }')/nova/trame; cp $NOVA_TRAME_LOCATION/view/theme/assets/js/*.js /app/www-content/assets/js/
-{% if use_mantid %}
-RUN mkdir -p /.mantid
-RUN chmod og+rwX -R /.mantid
-{% endif %}
 CMD [ "supervisord" ]
 {%- endif -%}
