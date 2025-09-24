@@ -1,4 +1,4 @@
-<tool id="{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" {% if application_type in ['Nova Application', 'Tutorial'] %}nova_category="{{ tool_category }}" tool_type="interactive" {% endif %} name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
+<tool id="{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" {% if application_type in ['Nova Application', 'Tutorial'] %}nova_category="{{ tool_category }}{% if tool_category == 'generic' %}-tools{% endif %}" tool_type="interactive" {% endif %} name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
     <description>{{ project_name }} - A tool generated using the NOVA Application Template</description>
     <requirements>
         <container type="docker" shell="/bin/bash">@CONTAINER_REGISTRY@/@CONTAINER_PATH@:@CONTAINER_TAG@</container>
