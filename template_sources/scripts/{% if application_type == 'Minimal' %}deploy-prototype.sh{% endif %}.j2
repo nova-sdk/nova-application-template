@@ -14,7 +14,7 @@ PROJECT_NAME_RAW="{{ project_name }}"
 # Slugify project name for URL/filename (lowercase, replace space/underscore with dash)
 PROJECT_SLUG=$(echo "$PROJECT_NAME_RAW" | tr '[:upper:]' '[:lower:]' | sed 's/[ _]/-/g')
 XML_FILENAME="${PROJECT_SLUG}.xml"
-DEST_DIR_IN_REPO="tools/neutrons" # Relative path within galaxy-tools repo
+DEST_DIR_IN_REPO="tools/neutrons/{{ tool_category }}{% if tool_category == 'generic' %}-tools{% endif %}" # Relative path within galaxy-tools repo
 
 CONTAINER_REGISTRY="savannah.ornl.gov"
 CONTAINER_PATH="ndip/tool-sources/${TOOL_CATEGORY}/${PROJECT_SLUG}/prototypes"
