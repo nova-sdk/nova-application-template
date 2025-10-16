@@ -1,10 +1,14 @@
-<tool id="{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" {% if application_type in ['Nova Application', 'Tutorial'] %}nova_category="{{ tool_category }}{% if tool_category == 'generic' %}-tools{% endif %}" tool_type="interactive" {% endif %} name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
+{% if application_type in ['Nova Application', 'Tutorial'] %}
+<tool id="nova-{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" tool_type="interactive" name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
+{% else %}
+<tool id="{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
+{% endif %}
     <description>{{ project_name }} - A tool generated using the NOVA Application Template</description>
     <requirements>
         <container type="docker" shell="/bin/bash">@CONTAINER_REGISTRY@/@CONTAINER_PATH@:@CONTAINER_TAG@</container>
     </requirements>
     {% if application_type in ['Nova Application', 'Tutorial'] %}<entry_points>
-        <entry_point name="app entry" label="app_entry" requires_domain="False" requires_path_in_url="True">
+        <entry_point name="{{ project_name }}" label="app_entry" requires_domain="False" requires_path_in_url="True">
             <port>8081</port>
         </entry_point>
     </entry_points>{% endif %}
