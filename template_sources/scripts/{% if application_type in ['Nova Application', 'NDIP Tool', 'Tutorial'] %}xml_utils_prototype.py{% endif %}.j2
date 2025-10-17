@@ -61,7 +61,7 @@ def push_tool_xml_prototype() -> None:
 
             repo.git.checkout("prototype")
             # Destination path within the tools repo
-            dest_dir = os.path.join(temp_dir, "tools", "neutrons")
+            dest_dir = os.path.join(temp_dir, "tools", "neutrons", "{{ tool_category }}{% if tool_category == 'generic' %}-tools{% endif %}")
             xml_filename = "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}.xml"
 
             # Create destination directory if it doesn't exist
