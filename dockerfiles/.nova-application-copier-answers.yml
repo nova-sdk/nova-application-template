@@ -5,4 +5,3 @@ multitabs: true
 project_name: nova_application
 python_package: nova_application
 tool_category: generic
-use_mantid: false

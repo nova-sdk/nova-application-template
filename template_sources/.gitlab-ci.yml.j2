@@ -23,9 +23,9 @@ before_script:
   - source rse-bash-modules.sh
   - func_rse_docker_cleanup
   - docker login -u $NDIP_DOCKER_USER -p $NDIP_DOCKER_PASSWORD $NDIP_DOCKER_REPOSITORY
-  {% if application_type != 'Minimal' -%}
+{%- if application_type != 'Minimal' %}
   - export VERSION=$(cat pyproject.toml | grep "version =" | head -n 1 | awk '{ print $3 }' | tr -d '"')
-  {% else -%}
+{%- else %}
   # Extract version from minimal_config.yaml for Minimal type
   - export VERSION=$(grep '^version:' minimal_config.yaml | sed -n '/^version:/ {s/^version:[[:space:]]*"\([^"]*\)".*$/\1/p; q;}')
   - |
@@ -46,9 +46,9 @@ lint-check:
   stage: lint
   script:
     - docker build -f dockerfiles/Dockerfile --target source -t image .
-    - docker run -u `id -u`:`id -g` image poetry run ruff check
-    - docker run -u `id -u`:`id -g` image poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` image poetry run mypy .
+    - docker run -u `id -u`:`id -g` image ruff check
+    - docker run -u `id -u`:`id -g` image ruff format --check
+    - docker run -u `id -u`:`id -g` image mypy .
     - docker tag image ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
     - docker push ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
   tags:
@@ -60,9 +60,9 @@ unit-tests:
   stage: test
   script:
     - mkdir reports
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} poetry run coverage run
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} poetry run coverage report
-    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} poetry run coverage xml -o reports/coverage.xml
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} coverage run
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} coverage report
+    - docker run -u `id -u`:`id -g` -v `pwd`/reports:/src/reports ${IMAGE_NAME}:src-${CI_COMMIT_SHA} coverage xml -o reports/coverage.xml
     - sed -i "s:<source>/src:<source>${CI_BUILDS_DIR}/${CI_PROJECT_PATH}:" reports/coverage.xml
 
   coverage: '/TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
@@ -173,10 +173,10 @@ package-build:
       -u `id -u`:`id -g`
       ${IMAGE_NAME}:src-${CI_COMMIT_SHA}
       bash -c "
-      poetry config repositories.gitlab_repo ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi &&
-      poetry publish -u gitlab-ci-token -p ${CI_JOB_TOKEN} -r gitlab_repo
+      pixi run hatch build &&
+      pixi run hatch publish -r ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi -u gitlab-ci-token -p ${CI_JOB_TOKEN} -r gitlab_repo
       {%- if publish_to_pypi %}
-      && poetry publish -u __token__ -p ${PYPI_API_TOKEN}
+      && pixi run hatch publish -u __token__ -p ${PYPI_API_TOKEN}
       {%- endif %}
       "
   when: manual

@@ -5,7 +5,7 @@ the {{ project_name }} project.
 
 ## Starting from the template
 
-- Add other Python dependencies you project need with `poetry add xxx` or `poetry add --dev xxx`
+- Add other Python dependencies you project need with [`pixi add`](https://pixi.sh/dev/reference/cli/pixi/add/).
 - Modify Dockerfile as needed. Please make sure it can still run as non-root (we use it in GitLab CI/CD and in general this
 is a good practice).
 - install pre-commit (if not already installed) - `pip install pre-commit`
@@ -21,30 +21,17 @@ to create an issue [in this repo](https://code.ornl.gov/ndip/project-templates/p
 
 
 ## Installation
-{% if use_mantid %}
-Start by installing [Pixi](https://pixi.sh/latest/). Once done, run the following to install Mantid and Poetry:
+Start by installing [Pixi](https://pixi.sh/latest/). Once done, run the following:
 
 ```commandline
 pixi install
-pixi run poetry install
-{% else %}
-```commandline
-pip install poetry
-poetry install
-{% endif %}
 ```
 
 ## Running
 ### From source
-{% if use_mantid %}
 ```bash
-pixi run poetry run app
+pixi run app
 ```
-{%- else -%}
-```bash
-poetry run app
-```
-{% endif %}
 
 ### Using Docker
 ```bash
@@ -63,23 +50,23 @@ docker run {{ python_package }}
 
 ## Formatting
 ```commandline
-poetry run ruff format
+pixi run ruff format
 ```
 
 ## Linting
 ```commandline
-poetry run ruff check
-poetry run mypy .
+pixi run ruff check
+pixi run mypy .
 ```
 
 ## Testing
 ```commandline
-poetry run pytest
+pixi run pytest
 ```
 or, with coverage
 ```commandline
-poetry run coverage run
-poetry run coverage report
+pixi run coverage run
+pixi run coverage report
 ```
 
 ## Updating project from template
@@ -88,7 +75,7 @@ This project was created from a [template]({{ _src_path }}) using [copier](https
 can try to update the project to incorporate these changes. Just enter the project folder, make sure `git status`
 shows it clean, and run:
 ```
-poetry run copier update
+copier update
 ```
 See [here](https://copier.readthedocs.io/en/stable/updating/#updating-a-project) for more information.
 

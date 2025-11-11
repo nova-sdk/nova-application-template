@@ -1,11 +1,7 @@
 FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/python:3.10-slim
 
-ENV POETRY_CACHE_DIR=/poetry/.cache
-ENV POETRY_CONFIG_DIR=/poetry/.config
-ENV POETRY_HOME=/poetry
-
 RUN apt-get update && apt-get install -y curl git
-RUN pip install poetry copier
+RUN pip install copier
 
 RUN curl -fsSL https://pixi.sh/install.sh | sh
 ENV PATH="/root/.pixi/bin:${PATH}"
@@ -19,37 +15,24 @@ RUN copier copy --data-file /template/dockerfiles/.library-copier-answers.yml --
 RUN copier copy --data-file /template/dockerfiles/.minimal-copier-answers.yml --vcs-ref=HEAD template src_minimal
 RUN copier copy --data-file /template/dockerfiles/.ndip-tool-copier-answers.yml --vcs-ref=HEAD template src_ndip_tool
 RUN copier copy --data-file /template/dockerfiles/.nova-application-copier-answers.yml --vcs-ref=HEAD template src_nova_application
-RUN copier copy --data-file /template/dockerfiles/.nova-application-mantid-copier-answers.yml --vcs-ref=HEAD template src_nova_application_mantid
 RUN copier copy --data-file /template/dockerfiles/.tutorial-copier-answers.yml --vcs-ref=HEAD template src_tutorial
 
 
 WORKDIR /src_cli
-RUN poetry install
+RUN pixi install
 
 WORKDIR /src_library
-RUN poetry install
+RUN pixi install
 
 WORKDIR /src_ndip_tool
-RUN poetry install
+RUN pixi install
 
 WORKDIR /src_nova_application
-RUN poetry install
-
-WORKDIR /src_nova_application_mantid
 RUN pixi install
-RUN pixi run poetry install
 
 WORKDIR /src_tutorial
-RUN poetry install
+RUN pixi install
+RUN pixi run hatch build
 
-RUN poetry install
-RUN poetry build --format=wheel
-
-RUN chmod og+rwX /poetry
-RUN chmod og+rwX /src_cli
-RUN chmod og+rwX /src_library
-RUN chmod og+rwX /src_minimal
-RUN chmod og+rwX /src_ndip_tool
-RUN chmod og+rwX /src_nova_application
-RUN chmod og+rwX /src_nova_application_mantid
-RUN chmod og+rwX /src_tutorial
+RUN mkdir -p /.cache
+RUN chmod -R og+rwX /.cache /src_cli /src_library /src_minimal /src_ndip_tool /src_nova_application /src_tutorial

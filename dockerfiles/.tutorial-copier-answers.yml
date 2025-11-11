@@ -5,4 +5,3 @@ multitabs: true
 project_name: Tutorial
 python_package: tutorial
 tool_category: generic
-use_mantid: false

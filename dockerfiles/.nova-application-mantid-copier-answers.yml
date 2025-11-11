@@ -1,8 +1,0 @@
-# Please do not edit or delete this file. It is needed to be able to update project from template.
-application_type: Nova Application
-framework: Trame
-multitabs: true
-project_name: nova_application
-python_package: nova_application
-tool_category: generic
-use_mantid: true

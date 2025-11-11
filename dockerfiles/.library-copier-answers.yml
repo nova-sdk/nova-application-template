@@ -5,4 +5,3 @@ publish_docs: true
 publish_to_pypi: true
 python_package: library
 tool_category: generic
-use_mantid: false

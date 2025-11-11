@@ -3,4 +3,3 @@ application_type: Command-line tool
 project_name: CLI Tool
 python_package: cli-tool
 tool_category: generic
-use_mantid: false
