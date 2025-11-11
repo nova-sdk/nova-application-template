@@ -3,4 +3,3 @@ application_type: NDIP Tool
 project_name: ndip_tool
 python_package: ndip_tool
 tool_category: generic
-use_mantid: false

@@ -23,10 +23,10 @@ test-cli-template:
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
-    - docker run -u `id -u`:`id -g` -w /src_cli image poetry run ruff check
-    - docker run -u `id -u`:`id -g` -w /src_cli image poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` -w /src_cli image poetry run mypy .
-    - docker run -u `id -u`:`id -g` -w /src_cli image poetry run pytest .
+    - docker run -u `id -u`:`id -g` -w /src_cli image pixi run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_cli image pixi run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_cli image pixi run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_cli image pixi run pytest .
   tags:
     - rse-multi-builder
 
@@ -38,10 +38,10 @@ test-library-template:
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
-    - docker run -u `id -u`:`id -g` -w /src_library image poetry run ruff check
-    - docker run -u `id -u`:`id -g` -w /src_library image poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` -w /src_library image poetry run mypy .
-    - docker run -u `id -u`:`id -g` -w /src_library image poetry run pytest .
+    - docker run -u `id -u`:`id -g` -w /src_library image pixi run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_library image pixi run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_library image pixi run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_library image pixi run pytest .
   tags:
     - rse-multi-builder
 
@@ -53,10 +53,10 @@ test-ndip-tool-template:
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
-    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image poetry run ruff check
-    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image poetry run mypy .
-    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image poetry run pytest .
+    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image pixi run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image pixi run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image pixi run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_ndip_tool image pixi run pytest .
   tags:
     - rse-multi-builder
 
@@ -68,25 +68,10 @@ test-nova-application-template:
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
-    - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run ruff check
-    - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run mypy .
-    - docker run -u `id -u`:`id -g` -w /src_nova_application image poetry run pytest .
-  tags:
-    - rse-multi-builder
-    
-test-nova-application-mantid-template:
-  stage: test
-  hooks:
-    pre_get_sources_script:
-    - 'test -d "${CI_PROJECT_DIR}" && sudo chown gitlab-runner -R "${CI_PROJECT_DIR}" ||:'
-  script:
-    - mkdir reports
-    - docker build -f dockerfiles/Dockerfile -t image .
-    - docker run -u `id -u`:`id -g` -w /src_nova_application_mantid image pixi run poetry run ruff check
-    - docker run -u `id -u`:`id -g` -w /src_nova_application_mantid image pixi run poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` -w /src_nova_application_mantid image pixi run poetry run mypy .
-    - docker run -u `id -u`:`id -g` -w /src_nova_application_mantid image pixi run poetry run pytest .
+    - docker run -u `id -u`:`id -g` -w /src_nova_application image pixi run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_nova_application image pixi run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_nova_application image pixi run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_nova_application image pixi run pytest .
   tags:
     - rse-multi-builder
 
@@ -98,10 +83,10 @@ test-tutorial-template:
   script:
     - mkdir reports
     - docker build -f dockerfiles/Dockerfile -t image .
-    - docker run -u `id -u`:`id -g` -w /src_tutorial image poetry run ruff check
-    - docker run -u `id -u`:`id -g` -w /src_tutorial image poetry run ruff format --check
-    - docker run -u `id -u`:`id -g` -w /src_tutorial image poetry run mypy .
-    - docker run -u `id -u`:`id -g` -w /src_tutorial image poetry run pytest .
+    - docker run -u `id -u`:`id -g` -w /src_tutorial image pixi run ruff check
+    - docker run -u `id -u`:`id -g` -w /src_tutorial image pixi run ruff format --check
+    - docker run -u `id -u`:`id -g` -w /src_tutorial image pixi run mypy .
+    - docker run -u `id -u`:`id -g` -w /src_tutorial image pixi run pytest .
   tags:
     - rse-multi-builder
 

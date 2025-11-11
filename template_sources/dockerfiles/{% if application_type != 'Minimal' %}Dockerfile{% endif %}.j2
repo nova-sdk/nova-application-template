@@ -4,11 +4,6 @@ FROM --platform=amd64 regproxy.ornl.gov/hub_proxy/kitware/trame:py3.10-2025-05 A
 
 RUN apt update && apt install -y curl
 
-# make sure image can run as non-root user
-ENV POETRY_CACHE_DIR=/poetry/.cache
-ENV POETRY_CONFIG_DIR=/poetry/.config
-ENV POETRY_HOME=/poetry
-
 COPY . /src
 WORKDIR /src
 
@@ -18,10 +13,8 @@ RUN pixi install
 SHELL [ "pixi", "run" ]
 ENTRYPOINT [ "pixi", "run" ]
 
-RUN poetry install
-
 RUN mkdir -p /.cache /.config /.mantid /.mozilla
-RUN chmod og+rwX -R /.cache /.config /.mantid /.mozilla /poetry /src
+RUN chmod og+rwX -R /.cache /.config /.mantid /.mozilla /src
 
 
 # This is a workaround that allows the COPY --from location to be defined as a build argument.
@@ -54,21 +47,14 @@ COPY scripts/run_trame.sh /
 
 RUN curl -fsSL https://pixi.sh/install.sh | sh
 ENV PATH="/root/.pixi/bin:${PATH}"
-RUN pixi install
+RUN pixi install -e production
 SHELL [ "pixi", "run" ]
 ENTRYPOINT [ "pixi", "run", "--manifest-path", "/src/pyproject.toml" ]
 
-RUN poetry install --compile --without dev
-RUN poetry run pip install supervisor
+RUN pixi add --pypi supervisor
+RUN scripts/generate_static_client.sh
 
-RUN python -m trame.tools.www --client-type vue3 --output /app/www-content
-
-# Get the static JS from nova-trame and add it to our client build
-RUN mkdir -p /app/www-content/assets/js
-RUN export NOVA_TRAME_LOCATION="$(pixi run poetry run pip show nova-trame | grep 'Location' | awk '{ print $2 }')/nova/trame" && cp $NOVA_TRAME_LOCATION/view/theme/assets/js/*.js /app/www-content/assets/js/
-
-RUN mkdir -p /.mantid
-RUN chmod og+rwX -R /.mantid
+RUN chmod og+rwX -R /src
 
 CMD [ "supervisord" ]
 {%- endif -%}

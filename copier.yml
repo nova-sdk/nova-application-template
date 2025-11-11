@@ -44,11 +44,6 @@ tool_category:
         Small Angle Neutron Scattering: small-angle-neutron-scattering
         Triple-Axis Spectroscopy: spectroscopy
 
-use_mantid:
-    type: bool
-    help: Do you want to install Mantid for your project?
-    default: no
-
 # --- Nova Application Specific ---
 # Implicitly GUI if Nova Application is chosen.
 framework:
@@ -101,8 +96,8 @@ _message_after_copy: |
     2. Read "DEVELOPMENT.md" for development guidelines!
 
     3. Install project dependencies and setup pre-commit:
-       $ poetry install
-       $ pre-commit install
+       $ pixi install
+       $ pixi run pre-commit install
     {% else %}
     2. Review the generated files, including `minimal_config.yaml`.
        You may need to install dependencies like 'git', 'docker', 'bash', 'sed', 'grep', 'mktemp' manually if not already present.
@@ -110,7 +105,7 @@ _message_after_copy: |
 
     {% if application_type in ['Nova Application', 'NDIP Tool'] %}
     4. Initialize the Git repository:
-       $ poetry run init-repo
+       $ pixi run init-repo
 
        This script will show you the planned actions and ask for confirmation.
        It will NOT push automatically. After running, review the changes and push manually:
@@ -119,13 +114,13 @@ _message_after_copy: |
        $ git push --set-upstream origin main
 
     5. Test if the application runs:
-       $ poetry run app
+       $ pixi run app
        {% if application_type == 'Nova Application' %}
        If there are any problems with GUI dependencies (like PyQt/Trame) you might need to install/update system libraries.
        {% endif %}
 
     6. Deploy the tool XML to the Galaxy tools repository on the prototype branch:
-       $ poetry run deploy-prototype
+       $ pixi run deploy-prototype
 
        This script will also ask for confirmation before committing and pushing to the Galaxy tools repo.
        Ensure your Docker image is built and pushed first (see DEVELOPMENT.md or Dockerfile).
@@ -133,7 +128,7 @@ _message_after_copy: |
     7. Start coding! Remember to document your work (see DEVELOPMENT.md). Continue to update the version in pyproject.toml and run deploy-prototype as needed.
 
     8. When you're ready to make your tool available to users, deloy the tool XML to the Galaxy tools repository on the dev branch:
-       $ poetry run deploy-production
+       $ pixi run deploy-production
 
        This script will first create a new branch with your XML, then create a merge request from that branch to the dev branch.
        This will start the process of making your tool available to users on calvera. You should also review the MR and assign a reviewer.
@@ -147,7 +142,7 @@ _message_after_copy: |
        # Add remote and push if needed
 
     5. Test if the application runs:
-       $ poetry run app
+       $ pixi run app
 
     6. Start coding! Remember to document your work (see DEVELOPMENT.md).
 
@@ -159,10 +154,10 @@ _message_after_copy: |
        # Add remote and push if needed
 
     {% if publish_to_pypi %}
-    5. Configure PyPI publishing details in `pyproject.toml` and follow Poetry's publishing guide.
+    5. Configure PyPI publishing details in `pyproject.toml` and follow [Hatch's](https://hatch.pypa.io/latest/) publishing guide.
     {% endif %}
     {% if publish_docs %}
-    6. Configure Readthedocs integration (see `.readthedocs.yml` and `docs/conf.py`). Build docs locally with `poetry run sphinx-build docs docs/_build/html`.
+    6. Configure Readthedocs integration (see `.readthedocs.yml` and `docs/conf.py`). Build docs locally with `pixi run sphinx-build docs docs/_build/html`.
     {% endif %}
 
     7. Start developing your library! Remember to write tests and documentation (see DEVELOPMENT.md).
@@ -170,8 +165,8 @@ _message_after_copy: |
     {% elif application_type == 'Tutorial' %}
     4. Follow the specific instructions provided in the generated tutorial documentation (e.g., TUTORIAL.md or README.md) for next steps.
        This likely involves installing dependencies, running setup scripts, and testing the application.
-       $ poetry install
-       $ pre-commit install
+       $ pixi install
+       $ pixi run pre-commit install
        # (Check tutorial docs for specific init-repo/deploy-tool usage if applicable)
 
     {% elif application_type == 'Minimal' %}

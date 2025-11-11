@@ -18,11 +18,8 @@ class TabContentPanel:
         self.create_ui()
 
     def create_ui(self) -> None:
-        with vuetify.VForm(ref="form", __events=["submit"], submit="$event.preventDefault()") as self.f:
-            with vuetify.VContainer(classes="pa-0", fluid=True):
-                with vuetify.VCard():
-                    with vuetify.VWindow(v_model="active_tab"):
-                        with vuetify.VWindowItem(value=1):
-                            SampleTab1()
-                        with vuetify.VWindowItem(value=2):
-                            SampleTab2()
+        with vuetify.VWindow(v_model="active_tab"):
+            with vuetify.VWindowItem(value=1):
+                SampleTab1()
+            with vuetify.VWindowItem(value=2):
+                SampleTab2()
