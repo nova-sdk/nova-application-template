@@ -3,8 +3,15 @@
 from typing import Any, Dict
 
 from nova.mvvm.interface import BindingInterface
+from pydantic import BaseModel, Field
 
 from ..models.main_model import MainModel
+
+
+class ViewState(BaseModel):
+    """View state for the application."""
+
+    active_tab: str = Field(default="0")
 
 
 class MainViewModel:
@@ -12,6 +19,7 @@ class MainViewModel:
 
     def __init__(self, model: MainModel, binding: BindingInterface):
         self.model = model
+        self.view_state = ViewState()
 
         # here we create a bind that connects ViewModel with View. It returns a communicator object,
         # that allows to update View from ViewModel (by calling update_view).
@@ -19,6 +27,7 @@ class MainViewModel:
         # but one also can provide a callback function if they want to react to those events
         # and/or process errors.
         self.config_bind = binding.new_bind(self.model, callback_after_update=self.change_callback)
+        self.view_state_bind = binding.new_bind(self.view_state)
 
     def change_callback(self, results: Dict[str, Any]) -> None:
         if results["error"]:
