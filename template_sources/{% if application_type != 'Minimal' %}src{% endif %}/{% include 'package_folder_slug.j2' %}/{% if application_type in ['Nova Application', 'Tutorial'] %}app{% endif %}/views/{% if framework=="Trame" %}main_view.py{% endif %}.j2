@@ -25,7 +25,7 @@ class MainApp(ThemedApp):
 {%- if multitabs %}
     """Main application view class. Calls rendering of nested UI elements."""
 {%- else %}
-    """Main application view class. Renders all UI elements on the mainn page."""
+    """Main application view class. Renders all UI elements on the main page."""
 {%- endif %}
 
     def __init__(self) -> None:
@@ -41,6 +41,7 @@ class MainApp(ThemedApp):
         self.create_ui()
 
     def create_ui(self) -> None:
+        self.set_theme("CompactTheme")
         self.state.trame__title = "{{ project_name }}"
 
         with super().create_ui() as layout:
