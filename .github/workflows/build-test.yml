@@ -1,0 +1,111 @@
+name: Build and Test
+
+on: push
+
+concurrency:
+  group: "${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GIT_STRATEGY: clone
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+          lfs: true
+      - name: Build
+        uses: docker/build-push-action@v6
+        id: build
+        with:
+          file: dockerfiles/Dockerfile
+          tags: image:latest
+          outputs: type=docker,dest=${{ runner.temp }}/template.tar
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}/template.tar
+  test-cli-template:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}
+      - name: Test
+        run: |
+          docker run -u `id -u`:`id -g` -w /src_cli image pixi run ruff check
+          docker run -u `id -u`:`id -g` -w /src_cli image pixi run ruff format --check
+          docker run -u `id -u`:`id -g` -w /src_cli image pixi run mypy .
+          docker run -u `id -u`:`id -g` -w /src_cli image pixi run pytest .
+  test-library-template:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}
+      - name: Test
+        run: |
+          docker run -u `id -u`:`id -g` -w /src_library image pixi run ruff check
+          docker run -u `id -u`:`id -g` -w /src_library image pixi run ruff format --check
+          docker run -u `id -u`:`id -g` -w /src_library image pixi run mypy .
+          docker run -u `id -u`:`id -g` -w /src_library image pixi run pytest .
+  test-ndip-tool-template:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}
+      - name: Test
+        run: |
+          docker run -u `id -u`:`id -g` -w /src_ndip_tool image pixi run ruff check
+          docker run -u `id -u`:`id -g` -w /src_ndip_tool image pixi run ruff format --check
+          docker run -u `id -u`:`id -g` -w /src_ndip_tool image pixi run mypy .
+          docker run -u `id -u`:`id -g` -w /src_ndip_tool image pixi run pytest .
+  test-nova-application-template:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}
+      - name: Test
+        run: |
+          docker run -u `id -u`:`id -g` -w /src_nova_application image pixi run ruff check
+          docker run -u `id -u`:`id -g` -w /src_nova_application image pixi run ruff format --check
+          docker run -u `id -u`:`id -g` -w /src_nova_application image pixi run mypy .
+          docker run -u `id -u`:`id -g` -w /src_nova_application image pixi run pytest .
+  test-tutorial-template:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          name: image
+          path: ${{ runner.temp }}
+      - name: Test
+        run: |
+          docker run -u `id -u`:`id -g` -w /src_tutorial image pixi run ruff check
+          docker run -u `id -u`:`id -g` -w /src_tutorial image pixi run ruff format --check
+          docker run -u `id -u`:`id -g` -w /src_tutorial image pixi run mypy .
+          docker run -u `id -u`:`id -g` -w /src_tutorial image pixi run pytest .
