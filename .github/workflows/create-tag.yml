@@ -1,0 +1,38 @@
+name: Create Tag
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: "${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions: write-all
+    env:
+      GIT_STRATEGY: clone
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+          lfs: true
+      - name: Get new version
+        run: |
+          git fetch --tags
+          latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+          IFS='.' read -r. -a parts <<< "${latest_tag}"
+          ((parts[1]++))
+          new_tag="${parts[0]}.${parts[1]}"
+          echo "${new_tag}" : $VERSION
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ vars.VERSION }}
