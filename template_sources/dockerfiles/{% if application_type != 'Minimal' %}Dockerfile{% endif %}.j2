@@ -54,7 +54,7 @@ ENTRYPOINT []
 RUN pixi add --pypi supervisor
 RUN scripts/generate_static_client.sh
 
-RUN chmod og+rwX -R /src
+RUN chmod og+rwX -R /root /src
 
 CMD [ "supervisord" ]
 {%- endif -%}
