@@ -19,7 +19,7 @@
         <environment_variable name="EP_PATH" inject="entry_point_path_for_label">app_entry</environment_variable>
     </environment_variables>
      <command><![CDATA[
-        {% if application_type in ['Nova Application', 'Tutorial'] and framework == 'Trame' %}supervisord > >(tee -a $output) 2> >(tee -a $output >&2)
+        {% if application_type in ['Nova Application', 'Tutorial'] and framework == 'Trame' %}pixi run -e production --manifest-path /src/pyproject.toml supervisord > >(tee -a $output) 2> >(tee -a $output >&2)
         {% elif application_type == 'Minimal' %} echo "Container ran successfully."
         {% else %}python3.10 -m {{ python_package | replace('-', '_') }} > >(tee -a $output) 2> >(tee -a $output >&2){% endif %}
     ]]></command>
