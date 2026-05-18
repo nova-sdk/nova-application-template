@@ -1,0 +1,71 @@
+name: Build and Test
+
+on: push
+
+concurrency:
+  group: "${{ github.ref }}"
+  cancel-in-progress: true
+
+env:
+  NDIP_DOCKER_REPOSITORY: "${{ secrets.NDIP_DOCKER_REPOSITORY }}"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GIT_STRATEGY: clone
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+          lfs: true
+      - name: Build
+        uses: docker/build-push-action@v6
+        id: build
+        with:
+          file: dockerfiles/Dockerfile
+          load: true
+          target: source
+      - name: Run ruff check
+        run: docker run --rm ${{ steps.build.outputs.imageid }} ruff check
+      - name: Run format check
+        run: docker run --rm ${{ steps.build.outputs.imageid }} ruff format --check
+      - name: Run mypy
+        run: docker run --rm ${{ steps.build.outputs.imageid }} mypy .
+      - name: Unit tests
+        run: docker run --rm ${{ steps.build.outputs.imageid }} pytest
+      - name: Run coverage
+        run: docker run --rm ${{ steps.build.outputs.imageid }} sh -c "coverage run && coverage report"
+      - name: Docs test
+        run: docker run --rm ${{ steps.build.outputs.imageid }} bash build_docs.sh
+
+  publish-prototype:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: savannah.ornl.gov/ndip/tool-sources/{{ tool_category }}/{% include 'name_slug.j2' %}/prototypes
+    permissions: write-all
+    steps:
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.NDIP_DOCKER_REGISTRY }}
+          username: ${{ secrets.NDIP_DOCKER_USER }}
+          password: ${{ secrets.NDIP_DOCKER_PASSWORD }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          file: dockerfiles/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}

@@ -9,7 +9,7 @@ TOOL_CATEGORY="{{ tool_category }}"
 PROJECT_NAME_RAW="{{ project_name }}"
 # Slugify project name for URL (lowercase, replace space/underscore with dash)
 PROJECT_SLUG=$(echo "$PROJECT_NAME_RAW" | tr '[:upper:]' '[:lower:]' | sed 's/[ _]/-/g')
-REMOTE_URL="https://code.ornl.gov/ndip/tool-sources/${TOOL_CATEGORY}/${PROJECT_SLUG}"
+REMOTE_URL="{{ git_remote }}"
 INITIAL_COMMIT_MSG="Initial commit from NOVA Application Template (Minimal)"
 
 # --- Functions ---

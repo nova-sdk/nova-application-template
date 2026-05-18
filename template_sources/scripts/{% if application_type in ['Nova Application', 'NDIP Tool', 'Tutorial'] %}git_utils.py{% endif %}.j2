@@ -12,8 +12,7 @@ def init_repository() -> None:
     This function will:
     - Initialize a git repository if one doesn't exist.
     - Set the default branch to 'main'.
-    - Add or update the 'origin' remote to point to the GitLab repository:
-      https://code.ornl.gov/ndip/tool-sources/{{ tool_category }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}
+    - Add or update the 'origin' remote to point to the GitLab repository: {{ git_remote }}
     - Stage all files.
     - Create an initial commit if no commits exist.
 
@@ -22,8 +21,7 @@ def init_repository() -> None:
     try:
         # Determine repository path
         # We need to organize the groups under tool sources and provide them an option of location
-        remote_url = "https://code.ornl.gov/ndip/tool-sources/{{ tool_category }}/"
-        remote_url += "{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+        remote_url = "{{ git_remote }}"
 
         # --- Confirmation Step ---
         print("\n--- Git Repository Setup Plan ---")
