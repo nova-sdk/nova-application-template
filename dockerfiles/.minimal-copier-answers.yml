@@ -1,4 +1,5 @@
 # Please do not edit or delete this file. It is needed to be able to update project from template.
 application_type: Minimal
+git_remote: https://code.ornl.gov/ndip/tool-sources/generic/minimal
 project_name: minimal
 tool_category: generic

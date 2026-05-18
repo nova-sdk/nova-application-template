@@ -1,5 +1,6 @@
 # Please do not edit or delete this file. It is needed to be able to update project from template.
 application_type: NDIP Tool
+git_remote: https://code.ornl.gov/ndip/tool-sources/generic/ndip_tool
 project_name: ndip_tool
 python_package: ndip_tool
 tool_category: generic
