@@ -44,6 +44,11 @@ tool_category:
         Small Angle Neutron Scattering: small-angle-neutron-scattering
         Triple-Axis Spectroscopy: spectroscopy
 
+git_remote:
+    type: str
+    help: Provide your git remote URL (if not the default, then you will need to email ndip@ornl.gov for help setting up secrets)
+    default: "https://code.ornl.gov/ndip/tool-sources/{{ tool_category }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
+
 # --- Nova Application Specific ---
 # Implicitly GUI if Nova Application is chosen.
 framework:
