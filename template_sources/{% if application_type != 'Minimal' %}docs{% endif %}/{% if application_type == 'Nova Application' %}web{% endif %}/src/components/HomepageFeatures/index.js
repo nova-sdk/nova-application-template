@@ -26,7 +26,7 @@ const FeatureList = [
     Svg: require('@site/static/img/logo.svg').default,
     description: (
       <>
-        The Neutrons Data Interpretation Platform (NDIP) allows to run Neutron Science applications and workflows on ONRL's' compute infrastructure.
+        The Neutrons Data Interpretation Platform (NDIP) allows to run Neutron Science applications and workflows on ORNL's' compute infrastructure.
       </>
     ),
   },
