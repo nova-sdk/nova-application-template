@@ -1,7 +1,7 @@
 {% if application_type in ['Nova Application', 'Tutorial'] %}
-<tool id="nova-{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" tool_type="interactive" name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
+<tool id="nova-{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" tool_type="interactive" name="{{ project_name }}" documentation="@TOOL_DOCS_LINK@" version="@TOOL_VERSION@" profile="22.01">
 {% else %}
-<tool id="{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" name="{{ project_name }}" version="@TOOL_VERSION@" profile="22.01">
+<tool id="{{ project_name.lower().replace(' ', '-').replace('_', '-') }}-prototype" name="{{ project_name }}" version="@TOOL_VERSION@" documentation="@TOOL_DOCS_LINK@" profile="22.01">
 {% endif %}
     <description>{{ project_name }} - A tool generated using the NOVA Application Template</description>
     <requirements>
@@ -17,6 +17,8 @@
         <environment_variable name="GALAXY_API_KEY" inject="api_key"/>
         <environment_variable name="HISTORY_ID">$__history_id__</environment_variable>
         <environment_variable name="EP_PATH" inject="entry_point_path_for_label">app_entry</environment_variable>
+        <environment_variable name="NOVA_TOOL_VERSION">@TOOL_VERSION@</environment_variable>
+        <environment_variable name="NOVA_TOOL_DOCS_LINK">@TOOL_DOCS_LINK@</environment_variable>
     </environment_variables>
      <command><![CDATA[
         {% if application_type in ['Nova Application', 'Tutorial'] and framework == 'Trame' %}pixi run -e production -m /src/pyproject.toml supervisord > >(tee -a $output) 2> >(tee -a $output >&2)
