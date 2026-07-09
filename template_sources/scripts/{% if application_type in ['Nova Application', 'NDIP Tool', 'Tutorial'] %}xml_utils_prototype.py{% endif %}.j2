@@ -40,12 +40,19 @@ def push_tool_xml_prototype() -> None:
             print(f"Error: Tool XML file not found at {xml_source}", file=sys.stderr)
             sys.exit(1)
 
-        # Get current project version for container tag
-        with open("pyproject.toml", "r") as f:
-            for line in f:
-                if line.startswith("version = "):
-                    version = line.split("=")[1].strip().strip("\"'")
-                    break
+        # Get current project version for container tag and documentation link
+        try:
+            with open("pyproject.toml", "r") as f:
+                for line in f:
+                    if line.startswith("version = "):
+                        version = line.split("=")[1].strip().strip("\"'")
+                        break
+
+                if line.startswith("Documentation = "):
+                    documentation = line.split("=")[1].strip().strip("\"'")
+        except Exception:
+            version = "latest"
+            documentation = ""
 
         # Temporary directory for Galaxy tools repo
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -94,6 +101,7 @@ def push_tool_xml_prototype() -> None:
                 print("Continuing without Docker image verification...", file=sys.stderr)
 
             xml_content = xml_content.replace("@TOOL_VERSION@", version)
+            xml_content = xml_content.replace("@TOOL_DOCS_LINK@", docs_link)
             xml_content = xml_content.replace("@CONTAINER_REGISTRY@", container_registry)
             xml_content = xml_content.replace("@CONTAINER_PATH@", container_path)
             xml_content = xml_content.replace("@CONTAINER_TAG@", prototype_image_tag)

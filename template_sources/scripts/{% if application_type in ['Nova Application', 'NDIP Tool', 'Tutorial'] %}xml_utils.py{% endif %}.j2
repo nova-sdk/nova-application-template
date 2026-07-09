@@ -71,15 +71,19 @@ def deploy_production_xml() -> None:
         pipeline_url = None
         check_uncommitted_changes()
 
-        # Get current project version for container tag
+        # Get current project version for container tag and documentation link
         try:
             with open("pyproject.toml", "r") as f:
                 for line in f:
                     if line.startswith("version = "):
                         version = line.split("=")[1].strip().strip("\"'")
                         break
+
+                if line.startswith("Documentation = "):
+                    documentation = line.split("=")[1].strip().strip("\"'")
         except Exception:
             version = "latest"
+            documentation = ""
 
         # Construct the full Docker image URL
         container_registry = "savannah.ornl.gov"
@@ -176,6 +180,7 @@ def deploy_production_xml() -> None:
             container_path = "ndip/tool-sources/{{ tool_category }}/{{ project_name.lower().replace(' ', '-').replace('_', '-') }}"
 
             xml_content = xml_content.replace("@TOOL_VERSION@", version)
+            xml_content = xml_content.replace("@TOOL_DOCS_LINK@", docs_link)
             xml_content = xml_content.replace("@CONTAINER_REGISTRY@", container_registry)
             xml_content = xml_content.replace("@CONTAINER_PATH@", container_path)
             xml_content = xml_content.replace("@CONTAINER_TAG@", version)
