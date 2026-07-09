@@ -49,10 +49,10 @@ def push_tool_xml_prototype() -> None:
                         break
 
                 if line.startswith("Documentation = "):
-                    documentation = line.split("=")[1].strip().strip("\"'")
+                    docs_link = line.split("=")[1].strip().strip("\"'")
         except Exception:
             version = "latest"
-            documentation = ""
+            docs_link = ""
 
         # Temporary directory for Galaxy tools repo
         with tempfile.TemporaryDirectory() as temp_dir:

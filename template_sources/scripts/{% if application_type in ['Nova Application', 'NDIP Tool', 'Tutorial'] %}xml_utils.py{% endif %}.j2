@@ -80,10 +80,10 @@ def deploy_production_xml() -> None:
                         break
 
                 if line.startswith("Documentation = "):
-                    documentation = line.split("=")[1].strip().strip("\"'")
+                    docs_link = line.split("=")[1].strip().strip("\"'")
         except Exception:
             version = "latest"
-            documentation = ""
+            docs_link = ""
 
         # Construct the full Docker image URL
         container_registry = "savannah.ornl.gov"
