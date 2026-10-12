@@ -1,0 +1,221 @@
+# AGENTS.md
+
+Instructions for AI coding agents working in the **{{ project_name }}** repository, which was
+generated from the [NOVA application template]({{ _src_path }}) using
+[copier](https://copier.readthedocs.io/).
+{% if application_type == 'Minimal' %}
+This is the Minimal flavor: there is no Python package here, only deployment configuration and
+shell scripts.
+
+## Layout
+
+```text
+minimal_config.yaml    project name and version (read by CI and by the deploy script)
+xml/tool.xml           Galaxy tool definition (placeholders filled in at deploy time)
+scripts/init-repo.sh   initializes the git repository and remote
+scripts/deploy-tool.sh pushes the tool XML to the Galaxy tools repository
+dockerfiles/Dockerfile container image used by CI and by Galaxy
+.gitlab-ci.yml         build and publish pipelines
+```
+
+The toolchain is bash, docker, git, sed and grep — there is no Python environment to activate.
+
+## Versioning and deployment
+
+- The `version` field in `minimal_config.yaml` is the single source of truth. CI and
+  `scripts/deploy-tool.sh` both read it; bump it there, nowhere else.
+- `xml/tool.xml` is a template: the deploy script substitutes `@TOOL_VERSION@`,
+  `@CONTAINER_REGISTRY@`, `@CONTAINER_PATH@` and `@CONTAINER_TAG@`. Leave those placeholders in
+  place and never commit resolved values.
+- Build and push the Docker image before deploying the tool XML:
+  `docker build -f dockerfiles/Dockerfile -t {{ project_name.lower().replace(' ', '-').replace('_', '-') }} .`
+  The image must still be able to run as a non-root user.
+- `scripts/init-repo.sh` and `scripts/deploy-tool.sh` push to shared remotes (the project's GitLab
+  repository and the Galaxy tools repository). **Do not run them on your own initiative** — ask
+  the user to run them, or to confirm first.
+
+## Shell script conventions
+
+- Keep `set -e` at the top of scripts, quote variable expansions, and keep the confirmation
+  prompts in the deploy scripts — they are the only guard against an accidental push.
+- Stick to the tools the scripts already assume (`bash`, `git`, `docker`, `sed`, `grep`,
+  `mktemp`); do not introduce new runtime dependencies.
+
+## Do not change without asking
+
+- `{{ _copier_conf.answers_file }}` — managed by copier. To change generated content, change the
+  template and run `copier update`.
+- `LICENSE` and `CODE_OF_CONDUCT.md`: shared across all NOVA projects and kept identical on purpose.
+- `.gitlab-ci.yml`: coordinate CI changes with the team.
+
+If a change would be useful for every project built from the template, raise it on the
+[template repository]({{ _src_path }}) instead of patching this project alone.
+
+## Before handing work back
+
+1. Check modified scripts with `bash -n` (or `shellcheck`, if available).
+2. Confirm `dockerfiles/Dockerfile` still builds.
+3. Confirm the version in `minimal_config.yaml` is what you intend to deploy.
+
+Report any step you skipped and why.
+{%- else %}
+Human-facing setup notes live in [DEVELOPMENT.md](DEVELOPMENT.md); this file is the condensed
+version plus the conventions that are easy to get wrong.
+
+## Environment and commands
+
+All tooling runs through [Pixi](https://pixi.sh/latest/). The project environment is *not* on
+`PATH`, so always prefix commands with `pixi run` — calling bare `ruff`, `mypy`, `pytest` or
+`python` will use the wrong interpreter.
+
+```bash
+pixi install              # create/refresh the environment (run once after cloning)
+pixi run app              # run the {% if application_type == 'Library' %}package entry point{% else %}application{% endif %}
+pixi run ruff format      # format code
+pixi run ruff check       # lint
+pixi run mypy .           # type-check
+pixi run pytest           # run tests
+pixi run coverage run && pixi run coverage report   # tests with coverage
+```
+
+Add dependencies with [`pixi add`](https://pixi.sh/dev/reference/cli/pixi/add/) rather than by
+hand-editing `pyproject.toml`, so the lock file stays consistent.
+
+## Layout
+
+```text
+{% if application_type in ['Nova Application', 'Tutorial'] -%}
+src/{{ python_package | replace('-', '_') | replace('.', '/') }}/app/
+    __main__.py        entry point (`python -m {{ python_package | replace('-', '_') }}.app`)
+    main.py            application bootstrap
+    mvvm_factory.py    constructs and wires view models
+    models/            Pydantic data models
+    view_models/       state and presentation logic, data bindings
+    views/             {% if framework == 'Trame' %}Trame{% else %}{{ framework }}{% endif %} UI components
+{%- else -%}
+src/{{ python_package | replace('-', '_') | replace('.', '/') }}/
+    __main__.py        entry point (`python -m {{ python_package | replace('-', '_') }}`)
+    main.py            entry function
+    main_class.py      main implementation class
+{%- endif %}
+tests/                 pytest suite
+{% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] -%}
+scripts/               git and Galaxy XML helpers, exposed as pixi tasks
+xml/tool.xml           Galaxy tool definition (placeholders filled in at deploy time)
+{% endif -%}
+docs/                  Sphinx API documentation
+{% if application_type == 'Nova Application' -%}
+docs/web/              Docusaurus user guide (published to calvera.ornl.gov/docs)
+{% endif -%}
+dockerfiles/Dockerfile container image used by CI{% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] %} and by Galaxy{% endif %}
+```
+{% if application_type in ['Nova Application', 'Tutorial'] %}
+## Architecture: MVVM
+
+The application follows the MVVM pattern provided by `nova-mvvm`. Keep the layers separate:
+
+- **Models** (`models/`) are Pydantic `BaseModel` classes. Declare fields with `Field(...)` and
+  fill in `title`, `description` and `examples` — the GUI reads that metadata to build and
+  document its inputs. Models hold data and validation rules only.
+- **View models** (`view_models/`) own state transitions and business logic. Create bindings with
+  `binding.new_bind(...)` in `__init__`, react to changes through `callback_after_update`, and
+  push updates to the UI with `update_in_view(...)`. View models must not import UI modules.
+- **Views** (`views/`) build the interface and bind to view-model fields by name. No business
+  logic, no direct model mutation, no I/O in a view.
+- Every new view model must be registered in `create_viewmodels()` in `mvvm_factory.py`.
+{% if framework == 'Trame' %}
+Views build on `nova-trame`: compose the components from `nova.trame` (`ThemedApp`,
+`nova.trame.view.components`, `nova.trame.view.layouts`) instead of using raw Trame widgets, so
+theming and layout stay consistent with other NOVA tools.
+{% endif %}{% endif %}
+## Library documentation
+
+{% if application_type in ['Nova Application', 'Tutorial'] -%}
+- `nova-mvvm` (bindings, view models):
+  https://nova-application-development.readthedocs.io/projects/mvvm-lib/en/latest/
+{% if framework == 'Trame' -%}
+- `nova-trame` (components, layouts, theming):
+  https://nova-application-development.readthedocs.io/projects/nova-trame/en/stable/
+{% endif -%}
+{% endif -%}
+{% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] -%}
+- `nova-galaxy` (driving Galaxy tool runs from Python):
+  https://nova-application-development.readthedocs.io/projects/nova-galaxy/en/latest/
+{% endif -%}
+- All NOVA libraries: https://nova-application-development.readthedocs.io/en/latest/
+
+Consult these before writing against a NOVA library: they are not well represented in model
+training data, so guessed signatures and component names are usually wrong.
+
+## Code style
+
+Enforced by `ruff` and `mypy`; the settings live in `pyproject.toml`.
+
+- Line length 120. Let `ruff format` do the formatting — do not hand-wrap code.
+- Lint rules: pycodestyle, pyflakes, isort, bugbear, comprehensions, PEP8 naming and pydocstyle
+  (numpy convention). Imports are sorted by ruff; do not reorder them manually.
+- Module and class docstrings are required. Function and method docstrings are optional
+  (`D102`/`D103` are ignored), but public API functions should document parameters and returns in
+  numpy style.
+- `mypy` runs with `disallow_untyped_defs` and `check_untyped_defs`: annotate every function
+  signature, including `-> None`. Do not silence errors with `# type: ignore` or by widening to
+  `Any` unless there is no alternative, and never add paths to the mypy `exclude` list to make an
+  error go away.
+
+## Tests
+
+- Tests live in `tests/`, in files named `test*.py`.
+- Add or update tests for any behavior change, and run `pixi run pytest` before reporting work done.
+- Tests must run headless in CI (no display, no network){% if application_type in ['Nova Application', 'Tutorial'] %} — UI tests construct the application
+  object and assert on view-model state rather than driving a real window{% endif %}.
+
+## Pre-commit
+
+`pixi run pre-commit install` activates the hooks (ruff, ruff-format, mypy, whitespace and file
+checks). If a commit is rejected, fix the findings and re-stage the files; do not bypass hooks
+with `--no-verify`.
+
+## Versioning{% if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] %} and deployment{% endif %}
+
+- The version in `[project]` of `pyproject.toml` is the single source of truth. It drives Docker
+  image tags, the Python package version and automatic git tags. Bump it there, nowhere else.
+{%- if application_type in ['Nova Application', 'NDIP Tool', 'Tutorial'] %}
+- `xml/tool.xml` is a template: the deploy scripts substitute `@TOOL_VERSION@`,
+  `@CONTAINER_REGISTRY@`, `@CONTAINER_PATH@` and `@CONTAINER_TAG@`. Leave those placeholders in
+  place and never commit resolved values.
+- `pixi run init-repo`, `pixi run deploy-prototype` and `pixi run deploy-production` push to
+  shared remotes (the project's GitLab repository and the Galaxy tools repository). **Do not run
+  them on your own initiative** — ask the user to run them, or to confirm first.
+{%- endif %}
+{%- if publish_to_pypi is defined and publish_to_pypi %}
+- Packages are published to PyPI by the manually-triggered `publish` CI job; do not run
+  `hatch publish` by hand.
+{%- endif %}
+{%- if publish_docs is defined and publish_docs %}
+- API documentation is published to readthedocs.io by CI (via a webhook) once changes land on the
+  default branch.
+{%- endif %}
+
+## Do not change without asking
+
+- `{{ _copier_conf.answers_file }}` — managed by copier. To change generated content, change the
+  template and run `copier update`.
+- Linter and formatter configuration, `LICENSE`, `CODE_OF_CONDUCT.md`: these are shared across all
+  NOVA projects and are kept identical on purpose.
+- `.gitlab-ci.yml` and `.github/workflows/`: coordinate CI changes with the team.
+- Generated or vendored directories: `.pixi/`, `docs/_build/`{% if application_type == 'Nova Application' %}, `docs/web/node_modules/`{% endif %}, `reports/`.
+
+If a change would be useful for every project built from the template, raise it on the
+[template repository]({{ _src_path }}) instead of patching this project alone.
+
+## Before handing work back
+
+1. `pixi run ruff format`
+2. `pixi run ruff check`
+3. `pixi run mypy .`
+4. `pixi run pytest`
+5. `pixi run bash build_docs.sh` if you changed docstrings or `docs/` (CI runs this too).
+6. Update the documentation you affected{% if application_type == 'Nova Application' %} (`docs/` for API docs, `docs/web/docs/` for the user guide){% endif %}.
+
+Report any step you skipped and why.
+{%- endif %}
